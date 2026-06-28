@@ -8,22 +8,47 @@ import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
 import 'booking_detail_sheet.dart';
-import 'booking_form_page.dart';
 
-class BookingListView extends StatelessWidget {
-  const BookingListView({super.key});
+class BookingListView extends StatefulWidget {
+  final bool isHistory;
+  const BookingListView({super.key, required this.isHistory});
+
+  @override
+  State<BookingListView> createState() => _BookingListViewState();
+}
+
+class _BookingListViewState extends State<BookingListView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.isHistory) {
+        context.read<BookingViewModel>().loadHistoryBookings();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<BookingViewModel>();
     final isAdmin = context.watch<AuthViewModel>().currentUser?.isAdmin ?? false;
 
-    return Scaffold(
-      body: Column(
-        children: [
-          // Filter chips
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+    if (widget.isHistory) {
+      return _buildHistoryTab(vm, isAdmin);
+    }
+    return _buildActiveTab(vm, isAdmin);
+  }
+
+  // ── Tab Aktif ──────────────────────────────────────────────────────────────
+
+  Widget _buildActiveTab(BookingViewModel vm, bool isAdmin) {
+    return Column(
+      children: [
+        // Filter chips
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
             child: Row(
               children: BookingFilter.values.map((f) {
                 final labels = {
@@ -44,46 +69,63 @@ class BookingListView extends StatelessWidget {
               }).toList(),
             ),
           ),
+        ),
 
-          Expanded(
-            child: vm.isLoading && vm.filteredBookings.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : vm.filteredBookings.isEmpty
-                    ? const AppEmptyState(
-                        title: 'Tidak ada booking aktif',
-                        subtitle: 'Buat booking baru dengan tombol +',
-                        icon: Icons.receipt_long_outlined,
-                      )
-                    : RefreshIndicator(
-                        onRefresh: vm.loadActiveBookings,
-                        child: ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: vm.filteredBookings.length,
-                          separatorBuilder: (_, _a) => const SizedBox(height: 10),
-                          itemBuilder: (context, i) {
-                            final b = vm.filteredBookings[i];
-                            return _BookingCard(booking: b, isAdmin: isAdmin);
-                          },
-                        ),
+        Expanded(
+          child: vm.isLoading && vm.filteredBookings.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : vm.filteredBookings.isEmpty
+                  ? const AppEmptyState(
+                      title: 'Tidak ada booking aktif',
+                      subtitle: 'Buat booking baru dengan tombol +',
+                      icon: Icons.receipt_long_outlined,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: vm.loadActiveBookings,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+                        itemCount: vm.filteredBookings.length,
+                        separatorBuilder: (_, _a) => const SizedBox(height: 10),
+                        itemBuilder: (context, i) {
+                          final b = vm.filteredBookings[i];
+                          return _BookingCard(booking: b, isAdmin: isAdmin);
+                        },
                       ),
-          ),
-        ],
+                    ),
+        ),
+      ],
+    );
+  }
+
+  // ── Tab Riwayat ────────────────────────────────────────────────────────────
+
+  Widget _buildHistoryTab(BookingViewModel vm, bool isAdmin) {
+    if (vm.isLoadingHistory && vm.historyBookings.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (vm.historyBookings.isEmpty) {
+      return const AppEmptyState(
+        title: 'Belum ada riwayat booking',
+        subtitle: 'Booking yang selesai atau dibatalkan akan muncul di sini',
+        icon: Icons.history,
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: vm.loadHistoryBookings,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: vm.historyBookings.length,
+        separatorBuilder: (_, _a) => const SizedBox(height: 10),
+        itemBuilder: (context, i) {
+          final b = vm.historyBookings[i];
+          return _BookingCard(booking: b, isAdmin: isAdmin);
+        },
       ),
-      floatingActionButton: isAdmin
-          ? FloatingActionButton.extended(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.black,
-              icon: const Icon(Icons.add),
-              label: const Text('Buat Booking'),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const BookingFormPage()),
-              ).then((_) => vm.loadActiveBookings()),
-            )
-          : null,
     );
   }
 }
+
+// ── Card ───────────────────────────────────────────────────────────────────────
 
 class _BookingCard extends StatelessWidget {
   final BookingModel booking;
@@ -107,7 +149,10 @@ class _BookingCard extends StatelessWidget {
             context: context,
             isScrollControlled: true,
             shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-            builder: (_) => BookingDetailSheet(booking: booking, isAdmin: isAdmin),
+            builder: (_) => ChangeNotifierProvider.value(
+              value: vm,
+              child: BookingDetailSheet(booking: booking, isAdmin: isAdmin),
+            ),
           ).then((_) => vm.loadActiveBookings());
         },
         child: Padding(

@@ -43,12 +43,6 @@ class _DashboardContent extends StatelessWidget {
             Text(dateFmt.format(now), style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: vm.load,
-          ),
-        ],
       ),
       body: vm.isLoading && vm.stats == null
           ? const Center(child: CircularProgressIndicator())
@@ -136,24 +130,31 @@ class _DashboardContent extends StatelessWidget {
                             icon: Icons.add_circle,
                             label: 'Buat Booking',
                             color: AppColors.primary,
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ChangeNotifierProvider(
-                                  create: (_) => BookingViewModel()..loadActiveBookings(),
-                                  child: const BookingFormPage(),
+                            onTap: () {
+                              final bookingVm = BookingViewModel()..loadActiveBookings();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNotifierProvider.value(
+                                    value: bookingVm,
+                                    child: const BookingFormPage(),
+                                  ),
                                 ),
-                              ),
-                            ).then((_) => vm.load()),
+                              ).then((_) => vm.load());
+                            },
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _QuickAction(
-                            icon: Icons.refresh,
-                            label: 'Refresh Data',
+                            icon: Icons.directions_car,
+                            label: 'Kelola Armada',
                             color: AppColors.secondary,
-                            onTap: vm.load,
+                            onTap: () {
+                              // Navigate to Armada tab (index 3)
+                              final scaffold = Scaffold.of(context);
+                              if (scaffold.hasDrawer) scaffold.openDrawer();
+                            },
                           ),
                         ),
                       ],
@@ -213,6 +214,41 @@ class _DashboardContent extends StatelessWidget {
                         },
                       ),
 
+                    const SizedBox(height: 24),
+
+                    // ── Logout ────────────────────────────────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.error),
+                          foregroundColor: AppColors.error,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Keluar', style: TextStyle(fontWeight: FontWeight.w600)),
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Keluar?'),
+                              content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true && context.mounted) {
+                            context.read<AuthViewModel>().signOut();
+                          }
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
