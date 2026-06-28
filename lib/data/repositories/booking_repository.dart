@@ -19,21 +19,34 @@ class BookingRepository {
   Future<List<BookingModel>> getBookingsForMonth(int year, int month) async {
     final start = DateTime(year, month, 1);
     final end = DateTime(year, month + 1, 1);
+    
+    // Firestore tidak mengizinkan inequality di lebih dari satu field.
+    // Kita filter startDateTime di db, lalu filter overlap secara manual.
+    // Tapi karena kita ingin *overlap* dengan bulan ini, query: 
+    // semua booking yang startDateTime < akhir bulan. 
+    // Sisanya (endDateTime >= awal bulan) kita filter di Dart.
     final snap = await _col
         .where('startDateTime', isLessThan: Timestamp.fromDate(end))
-        .where('endDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .get();
-    return snap.docs.map(BookingModel.fromFirestore).toList();
+        
+    return snap.docs
+        .map(BookingModel.fromFirestore)
+        .where((b) => !b.endDateTime.isBefore(start)) // endDateTime >= start
+        .toList();
   }
 
   Future<List<BookingModel>> getBookingsForDate(DateTime date) async {
     final start = DateTime(date.year, date.month, date.day);
     final end = start.add(const Duration(days: 1));
+    
     final snap = await _col
         .where('startDateTime', isLessThan: Timestamp.fromDate(end))
-        .where('endDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .get();
-    return snap.docs.map(BookingModel.fromFirestore).toList();
+        
+    return snap.docs
+        .map(BookingModel.fromFirestore)
+        .where((b) => !b.endDateTime.isBefore(start))
+        .toList();
   }
 
   Future<List<BookingModel>> getBookingsByDriver(String driverId) async {
@@ -62,16 +75,22 @@ class BookingRepository {
     required DateTime end,
     String? excludeBookingId,
   }) async {
+    // Firestore tidak mendukung multiple inequality filters di field yang berbeda (start & end).
+    // Jadi kita query statusnya saja, lalu filter tanggalnya secara lokal.
     final snap = await _col
         .where('bookingStatus', whereIn: ['upcoming', 'active'])
-        .where('startDateTime', isLessThan: Timestamp.fromDate(end))
-        .where('endDateTime', isGreaterThan: Timestamp.fromDate(start))
         .get();
 
     for (final doc in snap.docs) {
       if (excludeBookingId != null && doc.id == excludeBookingId) continue;
       final b = BookingModel.fromFirestore(doc);
-      if (b.vehicleId == vehicleId || b.driverId == driverId) return true;
+      
+      // Cek apakah tanggal tumpang tindih (overlap)
+      final bool isOverlap = b.startDateTime.isBefore(end) && b.endDateTime.isAfter(start);
+      
+      if (isOverlap) {
+        if (b.vehicleId == vehicleId || b.driverId == driverId) return true;
+      }
     }
     return false;
   }
