@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rentalin/features/armada/views/armada_page.dart';
 import 'package:rentalin/features/booking/views/booking_page.dart';
+import 'package:rentalin/features/schedule/views/schedule_page.dart';
 
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
@@ -14,7 +15,7 @@ class _AdminShellState extends State<AdminShell> {
 
   static const List<Widget> _pages = [
     _PlaceholderPage(label: 'Home Admin'),
-    _PlaceholderPage(label: 'Jadwal'),
+    SchedulePage(),
     BookingPage(),
     ArmadaPage(),
   ];
