@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
+import '../../firebase_options.dart';
 
 class AuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -26,28 +28,54 @@ class AuthRepository {
     return UserModel.fromFirestore(doc);
   }
 
+  /// Creates a driver's Firebase Auth account WITHOUT signing out the current admin.
+  /// Uses a secondary Firebase App instance to isolate the new session.
   Future<UserModel> createUserAccount({
     required String email,
     required String password,
     required String displayName,
     String? driverId,
   }) async {
-    final cred = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    final uid = cred.user!.uid;
-    final now = DateTime.now();
-    final user = UserModel(
-      userId: uid,
-      email: email,
-      displayName: displayName,
-      role: UserRole.operator,
-      driverId: driverId,
-      createdAt: now,
-      updatedAt: now,
-    );
-    await _db.collection('users').doc(uid).set(user.toFirestore());
-    return user;
+    // Use a secondary app so admin session is not affected
+    FirebaseApp? secondaryApp;
+    try {
+      secondaryApp = await Firebase.initializeApp(
+        name: 'secondaryApp',
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } on FirebaseException catch (e) {
+      // App already exists (e.g. from a previous failed attempt)
+      if (e.code == 'duplicate-app') {
+        secondaryApp = Firebase.app('secondaryApp');
+      } else {
+        rethrow;
+      }
+    }
+
+    try {
+      final secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
+      final cred = await secondaryAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final uid = cred.user!.uid;
+      // Sign out the secondary session immediately
+      await secondaryAuth.signOut();
+
+      final now = DateTime.now();
+      final user = UserModel(
+        userId: uid,
+        email: email,
+        displayName: displayName,
+        role: UserRole.operator,
+        driverId: driverId,
+        createdAt: now,
+        updatedAt: now,
+      );
+      await _db.collection('users').doc(uid).set(user.toFirestore());
+      return user;
+    } finally {
+      await secondaryApp.delete();
+    }
   }
 }

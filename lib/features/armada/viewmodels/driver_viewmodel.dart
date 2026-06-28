@@ -74,7 +74,11 @@ class DriverViewModel extends ChangeNotifier {
       await loadDrivers();
       return true;
     } catch (e) {
-      errorMessage = 'Gagal menambah supir. Pastikan email belum terdaftar.';
+      if (e.toString().contains('email-already-in-use')) {
+        errorMessage = 'Email sudah terdaftar di sistem.';
+      } else {
+        errorMessage = 'Gagal menambah supir: ${e.toString()}';
+      }
       isLoading = false;
       notifyListeners();
       return false;
