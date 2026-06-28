@@ -244,7 +244,7 @@ class _DashboardContent extends StatelessWidget {
                             ),
                           );
                           if (confirm == true && context.mounted) {
-                            context.read<AuthViewModel>().signOut();
+                            context.read<AuthViewModel>().logout();
                           }
                         },
                       ),
