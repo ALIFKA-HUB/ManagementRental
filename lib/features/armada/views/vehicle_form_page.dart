@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:rentalin/core/theme/app_colors.dart';
 import 'package:rentalin/core/widgets/app_button.dart';
@@ -22,8 +21,6 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
   final _notesCtrl = TextEditingController();
 
   VehicleCategory _selectedCategory = VehicleCategory.mpv;
-  XFile? _pickedImage;
-  final _picker = ImagePicker();
 
   bool get _isEdit => widget.vehicle != null;
 
@@ -46,37 +43,6 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Kamera'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final img = await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-                if (img != null) setState(() => _pickedImage = img);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galeri'),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final img = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-                if (img != null) setState(() => _pickedImage = img);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _onSave() async {
     if (_nameCtrl.text.isEmpty || _plateCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -95,7 +61,6 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
         plateNumber: _plateCtrl.text.trim(),
         category: _selectedCategory,
         conditionNotes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-        imageFile: _pickedImage,
       );
     } else {
       ok = await vm.addVehicle(
@@ -103,7 +68,6 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
         plateNumber: _plateCtrl.text.trim(),
         category: _selectedCategory,
         conditionNotes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-        imageFile: _pickedImage,
       );
     }
 
@@ -128,32 +92,16 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image picker
+            // Placeholder icon kendaraan (no photo upload)
             Center(
-              child: GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.divider),
-                  ),
-                  child: _pickedImage != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: Image.network(_pickedImage!.path, fit: BoxFit.cover),
-                        )
-                      : const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.camera_alt, size: 36, color: Colors.grey),
-                            SizedBox(height: 6),
-                            Text('Tambah Foto', style: TextStyle(color: Colors.grey)),
-                          ],
-                        ),
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(16),
                 ),
+                child: const Icon(Icons.directions_car, size: 48, color: Colors.grey),
               ),
             ),
             const SizedBox(height: 24),
@@ -166,7 +114,7 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
 
             // Kategori dropdown
             DropdownButtonFormField<VehicleCategory>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               decoration: InputDecoration(
                 labelText: 'Kategori',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

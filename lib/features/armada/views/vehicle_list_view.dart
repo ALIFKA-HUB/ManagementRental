@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:rentalin/core/theme/app_colors.dart';
 import 'package:rentalin/core/widgets/app_chip.dart';
@@ -124,20 +123,7 @@ class _VehicleCard extends StatelessWidget {
                 // Foto
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: vehicle.photoUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: vehicle.photoUrl!,
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
-                          placeholder: (_, _a) => Container(
-                            width: 72, height: 72,
-                            color: Colors.grey.shade200,
-                            child: const Icon(Icons.image, color: Colors.grey),
-                          ),
-                          errorWidget: (_, _a, _b) => _photoPlaceholder(),
-                        )
-                      : _photoPlaceholder(),
+                  child: _photoPlaceholder(),
                 ),
                 const SizedBox(width: 12),
                 // Info

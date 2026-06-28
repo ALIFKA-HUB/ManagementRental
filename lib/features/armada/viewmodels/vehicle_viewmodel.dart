@@ -1,6 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:rentalin/data/models/vehicle_model.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
@@ -31,7 +29,6 @@ class VehicleViewModel extends ChangeNotifier {
     required String plateNumber,
     required VehicleCategory category,
     String? conditionNotes,
-    XFile? imageFile,
   }) async {
     isLoading = true;
     errorMessage = null;
@@ -46,11 +43,6 @@ class VehicleViewModel extends ChangeNotifier {
         return false;
       }
 
-      String? photoUrl;
-      if (imageFile != null) {
-        photoUrl = await _uploadPhoto(imageFile, plateNumber);
-      }
-
       final now = DateTime.now();
       final vehicle = VehicleModel(
         vehicleId: '',
@@ -58,7 +50,7 @@ class VehicleViewModel extends ChangeNotifier {
         plateNumber: plateNumber.toUpperCase(),
         category: category,
         status: VehicleStatus.ready,
-        photoUrl: photoUrl,
+        photoUrl: null,
         conditionNotes: conditionNotes,
         createdAt: now,
         updatedAt: now,
@@ -80,7 +72,6 @@ class VehicleViewModel extends ChangeNotifier {
     required String plateNumber,
     required VehicleCategory category,
     String? conditionNotes,
-    XFile? imageFile,
   }) async {
     isLoading = true;
     errorMessage = null;
@@ -98,17 +89,11 @@ class VehicleViewModel extends ChangeNotifier {
         return false;
       }
 
-      String? photoUrl = vehicle.photoUrl;
-      if (imageFile != null) {
-        photoUrl = await _uploadPhoto(imageFile, plateNumber);
-      }
-
       final updated = vehicle.copyWith(
         name: name,
         plateNumber: plateNumber.toUpperCase(),
         category: category,
         conditionNotes: conditionNotes,
-        photoUrl: photoUrl,
       );
       await _vehicleRepo.update(updated);
       await loadVehicles();
@@ -152,14 +137,5 @@ class VehicleViewModel extends ChangeNotifier {
         : VehicleStatus.ready;
     await _vehicleRepo.updateStatus(vehicle.vehicleId, newStatus);
     await loadVehicles();
-  }
-
-  Future<String?> _uploadPhoto(XFile imageFile, String plateNumber) async {
-    final ref = FirebaseStorage.instance
-        .ref()
-        .child('vehicles/${plateNumber}_${DateTime.now().millisecondsSinceEpoch}.jpg');
-    final bytes = await imageFile.readAsBytes();
-    await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
-    return await ref.getDownloadURL();
   }
 }
