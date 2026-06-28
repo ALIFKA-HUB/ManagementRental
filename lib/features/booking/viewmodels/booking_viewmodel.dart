@@ -174,4 +174,94 @@ class BookingViewModel extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> completeBooking(String bookingId, String uid, String displayName) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      final log = BookingLogModel(
+        logId: '',
+        action: 'Booking diselesaikan',
+        performedBy: uid,
+        performedByName: displayName,
+        timestamp: DateTime.now(),
+      );
+      await _bookingRepo.completeBooking(bookingId: bookingId, log: log);
+      await loadActiveBookings();
+      return true;
+    } catch (_) {
+      errorMessage = 'Gagal menyelesaikan booking.';
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> extendBooking({
+    required String bookingId,
+    required DateTime newEnd,
+    required double extraPrice,
+    required String uid,
+    required String displayName,
+  }) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      final log = BookingLogModel(
+        logId: '',
+        action: 'Booking diperpanjang',
+        performedBy: uid,
+        performedByName: displayName,
+        note: 'Hingga ${newEnd.toIso8601String()}. Tambahan Rp ${extraPrice.toStringAsFixed(0)}',
+        timestamp: DateTime.now(),
+      );
+      await _bookingRepo.extendBooking(
+        bookingId: bookingId,
+        newEnd: newEnd,
+        extraPrice: extraPrice,
+        log: log,
+      );
+      await loadActiveBookings();
+      return true;
+    } catch (_) {
+      errorMessage = 'Gagal memperpanjang booking.';
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updatePaymentStatus({
+    required String bookingId,
+    required PaymentStatus newStatus,
+    required String uid,
+    required String displayName,
+  }) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+    try {
+      final log = BookingLogModel(
+        logId: '',
+        action: 'Status bayar diubah ke ${newStatus.label}',
+        performedBy: uid,
+        performedByName: displayName,
+        timestamp: DateTime.now(),
+      );
+      await _bookingRepo.updatePaymentStatus(
+        bookingId: bookingId,
+        newStatus: newStatus,
+        log: log,
+      );
+      await loadActiveBookings();
+      return true;
+    } catch (_) {
+      errorMessage = 'Gagal mengubah status pembayaran.';
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }
