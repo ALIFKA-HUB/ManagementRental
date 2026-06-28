@@ -65,7 +65,8 @@ DerivedData/
 # Firebase Configs (Secrets)
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
-firebase.json
+macos/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
 firebase-debug.log
 
 # Environment variables
