@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rentalin/features/schedule/views/schedule_page.dart';
 
 class OperatorShell extends StatefulWidget {
   const OperatorShell({super.key});
@@ -12,7 +13,7 @@ class _OperatorShellState extends State<OperatorShell> {
 
   static const List<Widget> _pages = [
     _PlaceholderPage(label: 'Home Operator'),
-    _PlaceholderPage(label: 'Jadwal'),
+    SchedulePage(),
   ];
 
   @override
