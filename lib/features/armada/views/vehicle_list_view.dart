@@ -20,25 +20,28 @@ class VehicleListView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
+    Widget content;
     if (vm.vehicles.isEmpty) {
-      return AppEmptyState(
+      content = AppEmptyState(
         title: 'Belum ada kendaraan',
         subtitle: isAdmin ? 'Tambah kendaraan baru dengan tombol +' : null,
         icon: Icons.directions_car_outlined,
+      );
+    } else {
+      content = ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: vm.vehicles.length,
+        separatorBuilder: (_, _a) => const SizedBox(height: 10),
+        itemBuilder: (context, i) {
+          final v = vm.vehicles[i];
+          return _VehicleCard(vehicle: v, isAdmin: isAdmin);
+        },
       );
     }
 
     return Stack(
       children: [
-        ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: vm.vehicles.length,
-          separatorBuilder: (_, _a) => const SizedBox(height: 10),
-          itemBuilder: (context, i) {
-            final v = vm.vehicles[i];
-            return _VehicleCard(vehicle: v, isAdmin: isAdmin);
-          },
-        ),
+        content,
         if (isAdmin)
           Positioned(
             right: 16,

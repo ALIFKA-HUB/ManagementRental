@@ -17,25 +17,28 @@ class DriverListView extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
+    Widget content;
     if (vm.drivers.isEmpty) {
-      return const AppEmptyState(
+      content = const AppEmptyState(
         title: 'Belum ada supir',
         subtitle: 'Tambah supir baru dengan tombol +',
         icon: Icons.person_outlined,
+      );
+    } else {
+      content = ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: vm.drivers.length,
+        separatorBuilder: (_, _a) => const SizedBox(height: 10),
+        itemBuilder: (context, i) {
+          final d = vm.drivers[i];
+          return _DriverCard(driver: d);
+        },
       );
     }
 
     return Stack(
       children: [
-        ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: vm.drivers.length,
-          separatorBuilder: (_, _a) => const SizedBox(height: 10),
-          itemBuilder: (context, i) {
-            final d = vm.drivers[i];
-            return _DriverCard(driver: d);
-          },
-        ),
+        content,
         Positioned(
           right: 16,
           bottom: 16,
