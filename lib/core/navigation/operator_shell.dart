@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rentalin/features/home_operator/views/operator_home_page.dart';
 import 'package:rentalin/features/schedule/views/schedule_page.dart';
 
 class OperatorShell extends StatefulWidget {
@@ -12,7 +13,7 @@ class _OperatorShellState extends State<OperatorShell> {
   int _selectedIndex = 0;
 
   static const List<Widget> _pages = [
-    _PlaceholderPage(label: 'Home Operator'),
+    OperatorHomePage(),
     SchedulePage(),
   ];
 
@@ -28,19 +29,6 @@ class _OperatorShellState extends State<OperatorShell> {
           NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Jadwal'),
         ],
       ),
-    );
-  }
-}
-
-class _PlaceholderPage extends StatelessWidget {
-  final String label;
-  const _PlaceholderPage({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(label)),
-      body: Center(child: Text(label, style: Theme.of(context).textTheme.titleLarge)),
     );
   }
 }
