@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rentalin/features/armada/views/armada_page.dart';
 import 'package:rentalin/features/booking/views/booking_page.dart';
+import 'package:rentalin/features/dashboard/views/dashboard_page.dart';
 import 'package:rentalin/features/schedule/views/schedule_page.dart';
 
 class AdminShell extends StatefulWidget {
@@ -14,7 +15,7 @@ class _AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
 
   static const List<Widget> _pages = [
-    _PlaceholderPage(label: 'Home Admin'),
+    DashboardPage(),
     SchedulePage(),
     BookingPage(),
     ArmadaPage(),
@@ -37,17 +38,3 @@ class _AdminShellState extends State<AdminShell> {
     );
   }
 }
-
-class _PlaceholderPage extends StatelessWidget {
-  final String label;
-  const _PlaceholderPage({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(label)),
-      body: Center(child: Text(label, style: Theme.of(context).textTheme.titleLarge)),
-    );
-  }
-}
-
