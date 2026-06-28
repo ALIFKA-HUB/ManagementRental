@@ -122,6 +122,41 @@ class _OperatorHomeContent extends StatelessWidget {
                     ],
 
                     const SizedBox(height: 24),
+
+                    // ── Logout ────────────────────────────────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.error),
+                          foregroundColor: AppColors.error,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Keluar', style: TextStyle(fontWeight: FontWeight.w600)),
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Keluar?'),
+                              content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true && context.mounted) {
+                            context.read<AuthViewModel>().logout();
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
