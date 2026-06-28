@@ -50,7 +50,12 @@ class DriverListView extends StatelessWidget {
             label: const Text('Tambah Supir'),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const DriverFormPage()),
+              MaterialPageRoute(
+                builder: (_) => ChangeNotifierProvider.value(
+                  value: vm,
+                  child: const DriverFormPage(),
+                ),
+              ),
             ).then((_) => vm.loadDrivers()),
           ),
         ),
@@ -111,7 +116,12 @@ class _DriverCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => DriverFormPage(driver: driver)),
+            MaterialPageRoute(
+              builder: (_) => ChangeNotifierProvider.value(
+                value: vm,
+                child: DriverFormPage(driver: driver),
+              ),
+            ),
           ).then((_) => vm.loadDrivers()),
           child: Padding(
             padding: const EdgeInsets.all(14),

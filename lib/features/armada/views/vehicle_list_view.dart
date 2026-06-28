@@ -53,7 +53,12 @@ class VehicleListView extends StatelessWidget {
               label: const Text('Tambah Kendaraan'),
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const VehicleFormPage()),
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: vm,
+                    child: const VehicleFormPage(),
+                  ),
+                ),
               ).then((_) => vm.loadVehicles()),
             ),
           ),
@@ -116,7 +121,12 @@ class _VehicleCard extends StatelessWidget {
           onTap: isAdmin
               ? () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => VehicleFormPage(vehicle: vehicle)),
+                    MaterialPageRoute(
+                      builder: (_) => ChangeNotifierProvider.value(
+                        value: vm,
+                        child: VehicleFormPage(vehicle: vehicle),
+                      ),
+                    ),
                   ).then((_) => vm.loadVehicles())
               : null,
           child: Padding(
