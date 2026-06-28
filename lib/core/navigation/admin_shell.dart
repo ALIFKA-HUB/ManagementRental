@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rentalin/features/armada/views/armada_page.dart';
 
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
@@ -14,6 +15,7 @@ class _AdminShellState extends State<AdminShell> {
     _PlaceholderPage(label: 'Home Admin'),
     _PlaceholderPage(label: 'Jadwal'),
     _PlaceholderPage(label: 'Booking'),
+    ArmadaPage(),
   ];
 
   @override
@@ -27,6 +29,7 @@ class _AdminShellState extends State<AdminShell> {
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.calendar_month_outlined), selectedIcon: Icon(Icons.calendar_month), label: 'Jadwal'),
           NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Booking'),
+          NavigationDestination(icon: Icon(Icons.directions_car_outlined), selectedIcon: Icon(Icons.directions_car), label: 'Armada'),
         ],
       ),
     );
@@ -45,3 +48,4 @@ class _PlaceholderPage extends StatelessWidget {
     );
   }
 }
+
