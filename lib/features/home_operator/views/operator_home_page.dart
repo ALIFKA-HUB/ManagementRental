@@ -46,13 +46,6 @@ class _OperatorHomeContent extends StatelessWidget {
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Text(dateFmt.format(now), style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => vm.load(userId),
-          ),
-        ],
       ),
       body: vm.isLoading && vm.todayBookings.isEmpty && vm.upcomingBookings.isEmpty
           ? const Center(child: CircularProgressIndicator())
