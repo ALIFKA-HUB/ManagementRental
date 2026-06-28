@@ -18,11 +18,13 @@ class BookingViewModel extends ChangeNotifier {
 
   List<BookingModel> activeBookings = [];
   List<BookingModel> filteredBookings = [];
+  List<BookingModel> historyBookings = [];
   List<VehicleModel> readyVehicles = [];
   List<DriverModel> standbyDrivers = [];
 
   BookingFilter currentFilter = BookingFilter.all;
   bool isLoading = false;
+  bool isLoadingHistory = false;
   String? errorMessage;
 
   Future<void> loadActiveBookings() async {
@@ -36,6 +38,18 @@ class BookingViewModel extends ChangeNotifier {
       errorMessage = 'Gagal memuat booking.';
     }
     isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadHistoryBookings() async {
+    isLoadingHistory = true;
+    notifyListeners();
+    try {
+      historyBookings = await _bookingRepo.getCompletedBookings();
+    } catch (_) {
+      errorMessage = 'Gagal memuat riwayat booking.';
+    }
+    isLoadingHistory = false;
     notifyListeners();
   }
 

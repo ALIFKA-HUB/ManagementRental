@@ -12,25 +12,39 @@ class AppChip extends StatelessWidget {
     this.color,
   });
 
-  // Warna dinamis berdasarkan status string
+  // Warna dinamis berdasarkan status string (label dari enum)
   static Color _colorForStatus(String status) {
     switch (status.toLowerCase()) {
+      // Kendaraan/Supir: ready/standby = hijau
       case 'ready':
       case 'standby':
-      case 'completed':
-      case 'paid':
         return AppColors.success;
+      // Booking selesai/lunas = hijau
+      case 'completed':
+      case 'selesai':
+      case 'paid':
+      case 'lunas':
+        return AppColors.success;
+      // Sedang digunakan / perjalanan / DP = kuning
       case 'in_use':
+      case 'sedang digunakan':
       case 'on_trip':
+      case 'sedang jalan':
       case 'active':
+      case 'aktif':
       case 'dp':
-        return AppColors.warning;
-      case 'maintenance':
-      case 'cancelled':
-      case 'unpaid':
-        return AppColors.error;
       case 'upcoming':
-        return AppColors.primary;
+      case 'akan datang':
+        return AppColors.warning;
+      // Bengkel / dibatalkan / belum bayar = merah/orange
+      case 'maintenance':
+      case 'bengkel':
+        return AppColors.warning; // orange
+      case 'cancelled':
+      case 'dibatalkan':
+      case 'unpaid':
+      case 'belum bayar':
+        return AppColors.error;
       default:
         return AppColors.textSecondaryLight;
     }
