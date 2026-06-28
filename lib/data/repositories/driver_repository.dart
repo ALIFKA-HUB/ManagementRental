@@ -42,4 +42,10 @@ class DriverRepository {
     if (excludeId != null && snap.docs.first.id == excludeId) return false;
     return true;
   }
+
+  Future<DriverModel?> findByUserId(String userId) async {
+    final snap = await _col.where('userId', isEqualTo: userId).limit(1).get();
+    if (snap.docs.isEmpty) return null;
+    return DriverModel.fromFirestore(snap.docs.first);
+  }
 }
