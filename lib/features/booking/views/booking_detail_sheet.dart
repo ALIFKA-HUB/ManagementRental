@@ -216,7 +216,8 @@ class BookingDetailSheet extends StatelessWidget {
               onPressed: () async {
                 if (newEnd == null) return;
                 Navigator.pop(ctx);
-                final extra = double.tryParse(extraCtrl.text) ?? 0;
+                // M-4: strip non-digits to fix Indonesian "10.000" → 10000 parsing
+                final extra = double.tryParse(extraCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
                 final ok = await vm.extendBooking(
                   bookingId: booking.bookingId,
                   newEnd: newEnd!,
@@ -237,7 +238,8 @@ class BookingDetailSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
+    // M-5: dispose controller when dialog is dismissed to prevent memory leak
+    ).then((_) => extraCtrl.dispose());
   }
 
   void _confirmComplete(BuildContext context, BookingViewModel vm, AuthViewModel auth) async {

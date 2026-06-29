@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
@@ -88,7 +89,16 @@ class DashboardViewModel extends ChangeNotifier {
       );
 
       upcomingToday = todayUpcoming;
-    } catch (e) {
+    } on FirebaseException catch (e, st) {
+      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      errorMessage = switch (e.code) {
+        'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
+        'permission-denied'   => 'Tidak punya akses ke data ini.',
+        'unavailable'         => 'Tidak ada koneksi. Coba lagi.',
+        _ => 'Gagal memuat dashboard.',
+      };
+    } catch (e, st) {
+      debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat dashboard.';
     }
 

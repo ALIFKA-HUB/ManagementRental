@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rentalin/data/models/booking_log_model.dart';
 import 'package:rentalin/data/models/booking_model.dart';
@@ -34,7 +35,16 @@ class BookingViewModel extends ChangeNotifier {
     try {
       activeBookings = await _bookingRepo.getActiveBookings();
       _applyFilter();
-    } catch (_) {
+    } on FirebaseException catch (e, st) {
+      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      errorMessage = switch (e.code) {
+        'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
+        'permission-denied'   => 'Tidak punya akses ke data ini.',
+        'unavailable'         => 'Tidak ada koneksi. Coba lagi.',
+        _ => 'Gagal memuat booking.',
+      };
+    } catch (e, st) {
+      debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat booking.';
     }
     isLoading = false;
@@ -46,7 +56,15 @@ class BookingViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       historyBookings = await _bookingRepo.getCompletedBookings();
-    } catch (_) {
+    } on FirebaseException catch (e, st) {
+      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      errorMessage = switch (e.code) {
+        'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
+        'permission-denied'   => 'Tidak punya akses ke data ini.',
+        _ => 'Gagal memuat riwayat booking.',
+      };
+    } catch (e, st) {
+      debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat riwayat booking.';
     }
     isLoadingHistory = false;
@@ -190,7 +208,24 @@ class BookingViewModel extends ChangeNotifier {
       await _customerRepo.upsertCustomer(customerName, customerPhone);
       await loadActiveBookings();
       return true;
-    } catch (_) {
+    } on BookingConflictException catch (e) {
+      // M-1: transaction detected resource grabbed by another admin
+      errorMessage = e.message;
+      isLoading = false;
+      notifyListeners();
+      return false;
+    } on FirebaseException catch (e, st) {
+      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      errorMessage = switch (e.code) {
+        'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
+        'permission-denied'   => 'Tidak punya akses.',
+        _ => 'Gagal membuat booking.',
+      };
+      isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e, st) {
+      debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal membuat booking.';
       isLoading = false;
       notifyListeners();
@@ -255,6 +290,31 @@ class BookingViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      // M-1: conflict check for extend window before committing
+      final original = activeBookings.firstWhere(
+        (b) => b.bookingId == bookingId,
+        orElse: () => throw StateError('Booking not found in active list'),
+      );
+      // Validate newEnd is strictly after current end (M-4 time picker can still pick same day earlier time)
+      if (!newEnd.isAfter(original.endDateTime)) {
+        errorMessage = 'Waktu selesai baru harus setelah waktu selesai saat ini.';
+        isLoading = false;
+        notifyListeners();
+        return false;
+      }
+      final conflict = await _bookingRepo.checkConflict(
+        vehicleId: original.vehicleId,
+        driverId: original.driverId,
+        start: original.startDateTime,
+        end: newEnd,
+        excludeBookingId: bookingId,
+      );
+      if (conflict) {
+        errorMessage = 'Perpanjangan bentrok dengan booking lain.';
+        isLoading = false;
+        notifyListeners();
+        return false;
+      }
       final log = BookingLogModel(
         logId: '',
         action: 'Booking diperpanjang',
@@ -271,7 +331,8 @@ class BookingViewModel extends ChangeNotifier {
       );
       await loadActiveBookings();
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('extendBooking error: $e\n$st');
       errorMessage = 'Gagal memperpanjang booking.';
       isLoading = false;
       notifyListeners();

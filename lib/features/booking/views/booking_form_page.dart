@@ -53,6 +53,9 @@ class _BookingFormPageState extends State<BookingFormPage> {
   }
 
   Future<void> _pickDateTime(bool isStart) async {
+    // L-4: capture vm before any await to avoid stale context access
+    final vm = context.read<BookingViewModel>();
+
     final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -74,7 +77,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
       }
 
       // Hapus pilihan jika kendaraan/supir tidak tersedia di jadwal baru
-      final vm = context.read<BookingViewModel>();
       final availVehicles = vm.getAvailableVehicles(_startDateTime, _endDateTime);
       if (_selectedVehicle != null && !availVehicles.any((v) => v.vehicleId == _selectedVehicle!.vehicleId)) {
         _selectedVehicle = null;
@@ -93,8 +95,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
     if (_selectedDriver == null) { _showSnack('Pilih supir.'); return false; }
     if (_startDateTime == null) { _showSnack('Pilih waktu mulai.'); return false; }
     if (_endDateTime == null) { _showSnack('Pilih waktu selesai.'); return false; }
-    if (_endDateTime!.isBefore(_startDateTime!)) { _showSnack('Waktu selesai harus setelah waktu mulai.'); return false; }
-    if (_priceCtrl.text.isEmpty) { _showSnack('Harga sewa wajib diisi.'); return false; }
+    // M-2 (already validated in VM) + explicit end > start guard
+    if (!_endDateTime!.isAfter(_startDateTime!)) { _showSnack('Waktu selesai harus setelah waktu mulai.'); return false; }
+    // M-3: validate parsed numeric value, not just emptiness
+    final parsedPrice = double.tryParse(_priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), ''));
+    if (parsedPrice == null || parsedPrice <= 0) { _showSnack('Harga sewa tidak valid.'); return false; }
     if (_routes.isEmpty) { _showSnack('Minimal 1 rute harus diisi.'); return false; }
     return true;
   }
@@ -117,7 +122,8 @@ class _BookingFormPageState extends State<BookingFormPage> {
       routes: _routes,
       startDateTime: _startDateTime!,
       endDateTime: _endDateTime!,
-      rentalPrice: double.tryParse(_priceCtrl.text.replaceAll('.', '').replaceAll(',', '')) ?? 0,
+      // M-3: strip all non-digits before parsing
+      rentalPrice: double.tryParse(_priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
       paymentStatus: _paymentStatus,
       createdBy: auth.currentUser!.userId,
       createdByName: auth.currentUser!.displayName,

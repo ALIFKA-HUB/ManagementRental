@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
@@ -34,7 +35,15 @@ class ScheduleViewModel extends ChangeNotifier {
 
       bookingsByDay = map;
       _refreshSelectedDay();
-    } catch (_) {
+    } on FirebaseException catch (e, st) {
+      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      errorMessage = switch (e.code) {
+        'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
+        'permission-denied'   => 'Tidak punya akses ke data ini.',
+        _ => 'Gagal memuat jadwal.',
+      };
+    } catch (e, st) {
+      debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat jadwal.';
     }
 

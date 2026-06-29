@@ -55,6 +55,21 @@ class BookingModel {
   // Status
   final BookingStatus bookingStatus;
 
+  /// M-8: Compute effective status from current time — no scheduler needed.
+  /// upcoming → active when startDateTime <= now < endDateTime.
+  BookingStatus get effectiveStatus {
+    if (bookingStatus == BookingStatus.completed || bookingStatus == BookingStatus.cancelled) {
+      return bookingStatus;
+    }
+    final now = DateTime.now();
+    if (bookingStatus == BookingStatus.upcoming &&
+        !now.isBefore(startDateTime) &&
+        now.isBefore(endDateTime)) {
+      return BookingStatus.active;
+    }
+    return bookingStatus;
+  }
+
   final String? notes;
   final String createdBy;
   final DateTime createdAt;
@@ -93,9 +108,10 @@ class BookingModel {
       driverId: d['driverId'] ?? '',
       driverName: d['driverName'] ?? '',
       routes: List<String>.from(d['routes'] ?? []),
-      startDateTime: (d['startDateTime'] as Timestamp).toDate(),
-      endDateTime: (d['endDateTime'] as Timestamp).toDate(),
-      rentalPrice: (d['rentalPrice'] as num).toDouble(),
+      // H-4: null-safe casts — a missing/pending field won't crash the whole list
+      startDateTime: (d['startDateTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      endDateTime:   (d['endDateTime']   as Timestamp?)?.toDate() ?? DateTime.now(),
+      rentalPrice:   (d['rentalPrice']   as num?)?.toDouble() ?? 0,
       paymentStatus: PaymentStatus.values.firstWhere(
         (e) => e.value == d['paymentStatus'],
         orElse: () => PaymentStatus.unpaid,
@@ -106,8 +122,8 @@ class BookingModel {
       ),
       notes: d['notes'],
       createdBy: d['createdBy'] ?? '',
-      createdAt: (d['createdAt'] as Timestamp).toDate(),
-      updatedAt: (d['updatedAt'] as Timestamp).toDate(),
+      createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (d['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
