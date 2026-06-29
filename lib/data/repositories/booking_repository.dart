@@ -71,10 +71,9 @@ class BookingRepository {
   }
 
   Future<List<BookingModel>> getCompletedBookings({DocumentSnapshot? lastDoc}) async {
-    // M-6: push orderBy + limit to Firestore so reads don't grow unbounded.
-    // Requires composite index: bookingStatus ASC, updatedAt DESC (in firestore.indexes.json).
+    // All bookings, sorted by most recent activity — no status filter.
+    // orderBy + limit pushed to Firestore so reads stay bounded (M-6).
     var query = _col
-        .where('bookingStatus', whereIn: ['completed', 'cancelled'])
         .orderBy('updatedAt', descending: true)
         .limit(20);
     if (lastDoc != null) query = query.startAfterDocument(lastDoc);
