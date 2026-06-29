@@ -133,15 +133,19 @@ class BookingRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    // C-1: Guard — don't clobber maintenance status
-    final vSnap = await _db.collection('vehicles').doc(booking.vehicleId).get();
-    if ((vSnap.data()?['status']) != VehicleStatus.maintenance.value) {
-      batch.update(vSnap.reference, {'status': VehicleStatus.ready.value, 'updatedAt': FieldValue.serverTimestamp()});
+    // H-5: Guard empty IDs
+    if (booking.vehicleId.isNotEmpty) {
+      final vSnap = await _db.collection('vehicles').doc(booking.vehicleId).get();
+      if ((vSnap.data()?['status']) != VehicleStatus.maintenance.value) {
+        batch.update(vSnap.reference, {'status': VehicleStatus.ready.value, 'updatedAt': FieldValue.serverTimestamp()});
+      }
     }
-    batch.update(_db.collection('drivers').doc(booking.driverId), {
-      'status': DriverStatus.standby.value,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    if (booking.driverId.isNotEmpty) {
+      batch.update(_db.collection('drivers').doc(booking.driverId), {
+        'status': DriverStatus.standby.value,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
     batch.set(bookingRef.collection('logs').doc(), log.toFirestore());
     await batch.commit();
   }
@@ -160,15 +164,19 @@ class BookingRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    // C-1: Guard — don't clobber maintenance status
-    final vSnap = await _db.collection('vehicles').doc(booking.vehicleId).get();
-    if ((vSnap.data()?['status']) != VehicleStatus.maintenance.value) {
-      batch.update(vSnap.reference, {'status': VehicleStatus.ready.value, 'updatedAt': FieldValue.serverTimestamp()});
+    // H-5: Guard empty IDs
+    if (booking.vehicleId.isNotEmpty) {
+      final vSnap = await _db.collection('vehicles').doc(booking.vehicleId).get();
+      if ((vSnap.data()?['status']) != VehicleStatus.maintenance.value) {
+        batch.update(vSnap.reference, {'status': VehicleStatus.ready.value, 'updatedAt': FieldValue.serverTimestamp()});
+      }
     }
-    batch.update(_db.collection('drivers').doc(booking.driverId), {
-      'status': DriverStatus.standby.value,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    if (booking.driverId.isNotEmpty) {
+      batch.update(_db.collection('drivers').doc(booking.driverId), {
+        'status': DriverStatus.standby.value,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
     batch.set(bookingRef.collection('logs').doc(), log.toFirestore());
     await batch.commit();
   }
