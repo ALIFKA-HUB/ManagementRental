@@ -93,9 +93,9 @@ class BookingModel {
       driverId: d['driverId'] ?? '',
       driverName: d['driverName'] ?? '',
       routes: List<String>.from(d['routes'] ?? []),
-      startDateTime: (d['startDateTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      endDateTime:   (d['endDateTime']   as Timestamp?)?.toDate() ?? DateTime.now(),
-      rentalPrice:   (d['rentalPrice']   as num?)?.toDouble() ?? 0,
+      startDateTime: (d['startDateTime'] as Timestamp).toDate(),
+      endDateTime: (d['endDateTime'] as Timestamp).toDate(),
+      rentalPrice: (d['rentalPrice'] as num).toDouble(),
       paymentStatus: PaymentStatus.values.firstWhere(
         (e) => e.value == d['paymentStatus'],
         orElse: () => PaymentStatus.unpaid,
@@ -106,8 +106,8 @@ class BookingModel {
       ),
       notes: d['notes'],
       createdBy: d['createdBy'] ?? '',
-      createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (d['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: (d['createdAt'] as Timestamp).toDate(),
+      updatedAt: (d['updatedAt'] as Timestamp).toDate(),
     );
   }
 

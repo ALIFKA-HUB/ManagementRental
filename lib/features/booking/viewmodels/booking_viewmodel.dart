@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rentalin/data/models/booking_log_model.dart';
 import 'package:rentalin/data/models/booking_model.dart';
@@ -35,11 +34,7 @@ class BookingViewModel extends ChangeNotifier {
     try {
       activeBookings = await _bookingRepo.getActiveBookings();
       _applyFilter();
-    } on FirebaseException catch (e, st) {
-      debugPrint('Firestore error [${e.code}]: ${e.message}\n$st');
-      errorMessage = _firestoreErrorMsg(e.code);
-    } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+    } catch (_) {
       errorMessage = 'Gagal memuat booking.';
     }
     isLoading = false;
@@ -51,11 +46,7 @@ class BookingViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       historyBookings = await _bookingRepo.getCompletedBookings();
-    } on FirebaseException catch (e, st) {
-      debugPrint('Firestore error [${e.code}]: ${e.message}\n$st');
-      errorMessage = _firestoreErrorMsg(e.code);
-    } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+    } catch (_) {
       errorMessage = 'Gagal memuat riwayat booking.';
     }
     isLoadingHistory = false;
@@ -256,27 +247,6 @@ class BookingViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      // H-2: Conflict check before extending
-      final original = activeBookings.firstWhere((b) => b.bookingId == bookingId);
-      if (!newEnd.isAfter(original.endDateTime)) {
-        errorMessage = 'Waktu baru harus setelah waktu selesai saat ini.';
-        isLoading = false;
-        notifyListeners();
-        return false;
-      }
-      final conflict = await _bookingRepo.checkConflict(
-        vehicleId: original.vehicleId,
-        driverId: original.driverId,
-        start: original.startDateTime,
-        end: newEnd,
-        excludeBookingId: bookingId,
-      );
-      if (conflict) {
-        errorMessage = 'Perpanjangan bentrok dengan booking lain.';
-        isLoading = false;
-        notifyListeners();
-        return false;
-      }
       final log = BookingLogModel(
         logId: '',
         action: 'Booking diperpanjang',
@@ -293,14 +263,7 @@ class BookingViewModel extends ChangeNotifier {
       );
       await loadActiveBookings();
       return true;
-    } on FirebaseException catch (e, st) {
-      debugPrint('Firestore error [${e.code}]: ${e.message}\n$st');
-      errorMessage = _firestoreErrorMsg(e.code);
-      isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+    } catch (_) {
       errorMessage = 'Gagal memperpanjang booking.';
       isLoading = false;
       notifyListeners();
@@ -332,26 +295,11 @@ class BookingViewModel extends ChangeNotifier {
       );
       await loadActiveBookings();
       return true;
-    } on FirebaseException catch (e, st) {
-      debugPrint('Firestore error [${e.code}]: ${e.message}\n$st');
-      errorMessage = _firestoreErrorMsg(e.code);
-      isLoading = false;
-      notifyListeners();
-      return false;
-    } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+    } catch (_) {
       errorMessage = 'Gagal mengubah status pembayaran.';
       isLoading = false;
       notifyListeners();
       return false;
     }
   }
-
-  // H-3: Typed error messages for Firebase exceptions
-  String _firestoreErrorMsg(String code) => switch (code) {
-    'failed-precondition' => 'Konfigurasi database belum lengkap. Hubungi admin.',
-    'permission-denied'   => 'Anda tidak punya akses ke data ini.',
-    'unavailable'         => 'Tidak ada koneksi. Coba lagi.',
-    _                     => 'Gagal memuat data.',
-  };
 }
