@@ -134,6 +134,14 @@ class BookingViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // M-2: Validate duration
+      if (!endDateTime.isAfter(startDateTime)) {
+        errorMessage = 'Waktu selesai harus setelah waktu mulai.';
+        isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
       // Cek bentrok
       final conflict = await _bookingRepo.checkConflict(
         vehicleId: vehicle.vehicleId,
