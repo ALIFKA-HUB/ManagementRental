@@ -61,13 +61,15 @@ class BookingRepository {
   }
 
   Future<List<BookingModel>> getCompletedBookings({DocumentSnapshot? lastDoc}) async {
-    var query = _col
-        .where('bookingStatus', whereIn: ['completed', 'cancelled'])
-        .orderBy('updatedAt', descending: true)
-        .limit(20);
+    var query = _col.where('bookingStatus', whereIn: ['completed', 'cancelled']);
     if (lastDoc != null) query = query.startAfterDocument(lastDoc);
     final snap = await query.get();
-    return snap.docs.map(BookingModel.fromFirestore).toList();
+    
+    final list = snap.docs.map(BookingModel.fromFirestore).toList();
+    // Sort locally by updatedAt descending
+    list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    
+    return list.take(20).toList();
   }
 
   Future<bool> checkConflict({
