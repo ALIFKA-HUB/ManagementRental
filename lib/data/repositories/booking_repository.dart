@@ -11,9 +11,10 @@ class BookingRepository {
   Future<List<BookingModel>> getActiveBookings() async {
     final snap = await _col
         .where('bookingStatus', whereIn: ['upcoming', 'active'])
-        .orderBy('startDateTime')
         .get();
-    return snap.docs.map(BookingModel.fromFirestore).toList();
+    final list = snap.docs.map(BookingModel.fromFirestore).toList();
+    list.sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+    return list;
   }
 
   Future<List<BookingModel>> getBookingsForMonth(int year, int month) async {
@@ -53,9 +54,10 @@ class BookingRepository {
     final snap = await _col
         .where('driverId', isEqualTo: driverId)
         .where('bookingStatus', whereIn: ['upcoming', 'active'])
-        .orderBy('startDateTime')
         .get();
-    return snap.docs.map(BookingModel.fromFirestore).toList();
+    final list = snap.docs.map(BookingModel.fromFirestore).toList();
+    list.sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+    return list;
   }
 
   Future<List<BookingModel>> getCompletedBookings({DocumentSnapshot? lastDoc}) async {

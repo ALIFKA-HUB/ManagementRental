@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_dimens.dart';
 
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -14,14 +15,13 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Style flat + border hairline diwariskan dari cardTheme (app_theme.dart).
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         child: Padding(
-          padding: padding ?? const EdgeInsets.all(16),
+          padding: padding ?? const EdgeInsets.all(AppSpacing.lg),
           child: child,
         ),
       ),

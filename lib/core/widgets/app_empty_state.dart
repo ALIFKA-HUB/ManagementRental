@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_typography.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_dimens.dart';
 
 class AppEmptyState extends StatelessWidget {
   final String title;
@@ -15,24 +16,31 @@ class AppEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.surfaceContainerHighest;
+    final textTheme = Theme.of(context).textTheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(color: muted, shape: BoxShape.circle),
+              child: Icon(icon, size: 34, color: AppColors.textSecondaryLight),
+            ),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               title,
-              style: AppTypography.subHeading.copyWith(color: Colors.grey.shade500),
+              style: textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 subtitle!,
-                style: AppTypography.body.copyWith(color: Colors.grey.shade400),
+                style: textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
             ],

@@ -72,6 +72,17 @@ class _BookingFormPageState extends State<BookingFormPage> {
       } else {
         _endDateTime = result;
       }
+
+      // Hapus pilihan jika kendaraan/supir tidak tersedia di jadwal baru
+      final vm = context.read<BookingViewModel>();
+      final availVehicles = vm.getAvailableVehicles(_startDateTime, _endDateTime);
+      if (_selectedVehicle != null && !availVehicles.any((v) => v.vehicleId == _selectedVehicle!.vehicleId)) {
+        _selectedVehicle = null;
+      }
+      final availDrivers = vm.getAvailableDrivers(_startDateTime, _endDateTime);
+      if (_selectedDriver != null && !availDrivers.any((d) => d.driverId == _selectedDriver!.driverId)) {
+        _selectedDriver = null;
+      }
     });
   }
 
@@ -146,36 +157,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                   const Divider(height: 32),
 
-                  // Kendaraan
-                  Text('Kendaraan & Supir', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-
-                  DropdownButtonFormField<VehicleModel>(
-                    value: _selectedVehicle,
-                    hint: const Text('Pilih Kendaraan'),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-                    items: vm.readyVehicles.map((v) => DropdownMenuItem(
-                      value: v,
-                      child: Text('${v.name} (${v.plateNumber})'),
-                    )).toList(),
-                    onChanged: (v) => setState(() => _selectedVehicle = v),
-                  ),
-                  const SizedBox(height: 12),
-
-                  DropdownButtonFormField<DriverModel>(
-                    value: _selectedDriver,
-                    hint: const Text('Pilih Supir'),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-                    items: vm.standbyDrivers.map((d) => DropdownMenuItem(
-                      value: d,
-                      child: Text('${d.name} (${d.codeId})'),
-                    )).toList(),
-                    onChanged: (d) => setState(() => _selectedDriver = d),
-                  ),
-
-                  const Divider(height: 32),
-
-                  // Waktu
+                  // Waktu (Jadwal dipindah ke atas agar logis)
                   Text('Jadwal', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
 
@@ -197,6 +179,35 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         ),
                       ),
                     ],
+                  ),
+
+                  const Divider(height: 32),
+
+                  // Kendaraan
+                  Text('Kendaraan & Supir', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+
+                  DropdownButtonFormField<VehicleModel>(
+                    value: _selectedVehicle,
+                    hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Kendaraan'),
+                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.getAvailableVehicles(_startDateTime, _endDateTime).map((v) => DropdownMenuItem(
+                      value: v,
+                      child: Text('${v.name} (${v.plateNumber})'),
+                    )).toList(),
+                    onChanged: (v) => setState(() => _selectedVehicle = v),
+                  ),
+                  const SizedBox(height: 12),
+
+                  DropdownButtonFormField<DriverModel>(
+                    value: _selectedDriver,
+                    hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Supir'),
+                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.getAvailableDrivers(_startDateTime, _endDateTime).map((d) => DropdownMenuItem(
+                      value: d,
+                      child: Text('${d.name} (${d.codeId})'),
+                    )).toList(),
+                    onChanged: (d) => setState(() => _selectedDriver = d),
                   ),
 
                   const Divider(height: 32),
