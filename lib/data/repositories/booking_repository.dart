@@ -103,8 +103,18 @@ class BookingRepository {
     final batch = _db.batch();
     final bookingRef = _col.doc();
     batch.set(bookingRef, booking.toFirestore());
-    final logRef = bookingRef.collection('logs').doc();
-    batch.set(logRef, log.toFirestore());
+    batch.set(bookingRef.collection('logs').doc(), log.toFirestore());
+
+    // C-1: Lock vehicle & driver atomically when booking is created
+    batch.update(_db.collection('vehicles').doc(booking.vehicleId), {
+      'status': VehicleStatus.inUse.value,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    batch.update(_db.collection('drivers').doc(booking.driverId), {
+      'status': DriverStatus.onTrip.value,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
     await batch.commit();
     return bookingRef.id;
   }
@@ -122,10 +132,12 @@ class BookingRepository {
       'bookingStatus': BookingStatus.cancelled.value,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-    batch.update(_db.collection('vehicles').doc(booking.vehicleId), {
-      'status': VehicleStatus.ready.value,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+
+    // C-1: Guard — don't clobber maintenance status
+    final vSnap = await _db.collection('vehicles').doc(booking.vehicleId).get();
+    if ((vSnap.data()?['status']) != VehicleStatus.maintenance.value) {
+      batch.update(vSnap.reference, {'status': VehicleStatus.ready.value, 'updatedAt': FieldValue.serverTimestamp()});
+    }
     batch.update(_db.collection('drivers').doc(booking.driverId), {
       'status': DriverStatus.standby.value,
       'updatedAt': FieldValue.serverTimestamp(),
@@ -147,10 +159,12 @@ class BookingRepository {
       'bookingStatus': BookingStatus.completed.value,
       'updatedAt': FieldValue.serverTimestamp(),
     });
-    batch.update(_db.collection('vehicles').doc(booking.vehicleId), {
-      'status': VehicleStatus.ready.value,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+
+    // C-1: Guard — don't clobber maintenance status
+    final vSnap = await _db.collection('vehicles').doc(booking.vehicleId).get();
+    if ((vSnap.data()?['status']) != VehicleStatus.maintenance.value) {
+      batch.update(vSnap.reference, {'status': VehicleStatus.ready.value, 'updatedAt': FieldValue.serverTimestamp()});
+    }
     batch.update(_db.collection('drivers').doc(booking.driverId), {
       'status': DriverStatus.standby.value,
       'updatedAt': FieldValue.serverTimestamp(),
