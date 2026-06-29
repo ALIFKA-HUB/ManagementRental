@@ -14,11 +14,13 @@ class AdminShell extends StatefulWidget {
 class _AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _pages = [
-    DashboardPage(),
-    SchedulePage(),
-    BookingPage(),
-    ArmadaPage(),
+  void _goToArmada() => setState(() => _selectedIndex = 3);
+
+  List<Widget> get _pages => [
+    DashboardPage(onGoToArmada: _goToArmada),
+    const SchedulePage(),
+    const BookingPage(),
+    const ArmadaPage(),
   ];
 
   @override

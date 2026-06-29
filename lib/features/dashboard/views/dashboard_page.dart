@@ -14,19 +14,21 @@ import 'package:rentalin/features/booking/views/booking_detail_sheet.dart';
 import 'package:rentalin/features/dashboard/viewmodels/dashboard_viewmodel.dart';
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+  final VoidCallback? onGoToArmada;
+  const DashboardPage({super.key, this.onGoToArmada});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => DashboardViewModel()..load(),
-      child: const _DashboardContent(),
+      child: _DashboardContent(onGoToArmada: onGoToArmada),
     );
   }
 }
 
 class _DashboardContent extends StatelessWidget {
-  const _DashboardContent();
+  final VoidCallback? onGoToArmada;
+  const _DashboardContent({this.onGoToArmada});
 
   @override
   Widget build(BuildContext context) {
@@ -148,12 +150,10 @@ class _DashboardContent extends StatelessWidget {
                           child: _QuickAction(
                             icon: Icons.directions_car_outlined,
                             label: 'Kelola Armada',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const ArmadaPage()),
-                              );
-                            },
+                            onTap: onGoToArmada ?? () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ArmadaPage()),
+                            ),
                           ),
                         ),
                       ],
