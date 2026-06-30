@@ -188,6 +188,7 @@ class BookingRepository {
   Future<void> completeBooking({
     required String bookingId,
     required BookingLogModel log,
+    double lateFee = 0,
   }) async {
     final batch = _db.batch();
     final bookingRef = _col.doc(bookingId);
@@ -196,6 +197,8 @@ class BookingRepository {
 
     batch.update(bookingRef, {
       'bookingStatus': BookingStatus.completed.value,
+      // TASK-02: settle any late-return surcharge into the final price.
+      if (lateFee > 0) 'rentalPrice': booking.rentalPrice + lateFee,
       'updatedAt': FieldValue.serverTimestamp(),
     });
 

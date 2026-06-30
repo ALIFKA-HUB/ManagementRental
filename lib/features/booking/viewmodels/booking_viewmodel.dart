@@ -261,14 +261,31 @@ class BookingViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      // TASK-02: if the booking is overdue, charge an automatic late fee and
+      // record it in the activity log alongside the completion.
+      BookingModel? booking;
+      for (final b in activeBookings) {
+        if (b.bookingId == bookingId) { booking = b; break; }
+      }
+      final lateFee = booking?.lateFee ?? 0;
+      final overdueHours = booking?.overdueHours ?? 0;
+      final note = lateFee > 0
+          ? 'Terlambat $overdueHours jam. Denda Rp ${lateFee.toStringAsFixed(0)}'
+          : null;
+
       final log = BookingLogModel(
         logId: '',
         action: 'Booking diselesaikan',
         performedBy: uid,
         performedByName: displayName,
+        note: note,
         timestamp: DateTime.now(),
       );
-      await _bookingRepo.completeBooking(bookingId: bookingId, log: log);
+      await _bookingRepo.completeBooking(
+        bookingId: bookingId,
+        log: log,
+        lateFee: lateFee,
+      );
       await loadActiveBookings();
       return true;
     } catch (_) {

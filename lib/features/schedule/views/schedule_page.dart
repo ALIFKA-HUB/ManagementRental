@@ -192,7 +192,7 @@ class _ScheduleBookingCard extends StatelessWidget {
                   ],
                 ),
               ),
-              AppChip(label: booking.bookingStatus.label),
+              AppChip(label: booking.effectiveStatusLabel),
             ],
           ),
         ),

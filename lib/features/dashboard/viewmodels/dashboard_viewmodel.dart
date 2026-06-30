@@ -11,6 +11,7 @@ class DashboardStats {
   final int totalDrivers;
   final int standbyDrivers;
   final int activeBookings;
+  final int overdueBookings;
   final int pendingPayment;
   final double todayRevenue;
   final double monthRevenue;
@@ -21,6 +22,7 @@ class DashboardStats {
     required this.totalDrivers,
     required this.standbyDrivers,
     required this.activeBookings,
+    required this.overdueBookings,
     required this.pendingPayment,
     required this.todayRevenue,
     required this.monthRevenue,
@@ -82,7 +84,10 @@ class DashboardViewModel extends ChangeNotifier {
         readyVehicles: (vehicles).where((v) => v.status.value == 'ready').length,
         totalDrivers: (drivers as List).length,
         standbyDrivers: (drivers).where((d) => d.status.value == 'standby').length,
-        activeBookings: active.length,
+        // TASK-02: count only bookings that are actually running right now,
+        // not future (upcoming) ones.
+        activeBookings: active.where((b) => b.effectiveStatus == BookingStatus.active).length,
+        overdueBookings: active.where((b) => b.isOverdue).length,
         pendingPayment: pending,
         todayRevenue: todayCompleted.fold(0.0, (sum, b) => sum + b.rentalPrice),
         monthRevenue: monthCompleted.fold(0.0, (sum, b) => sum + b.rentalPrice),

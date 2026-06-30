@@ -50,7 +50,7 @@ class BookingDetailSheet extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    AppChip(label: booking.bookingStatus.label),
+                    AppChip(label: booking.effectiveStatusLabel),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -65,6 +65,17 @@ class BookingDetailSheet extends StatelessWidget {
                   _DetailRow(label: 'Rute', value: booking.routes.join(' → ')),
                 _DetailRow(label: 'Harga', value: currency.format(booking.rentalPrice)),
                 _DetailRow(label: 'Pembayaran', value: booking.paymentStatus.label),
+                // TASK-02: surface the automatic late-return surcharge.
+                if (booking.lateFee > 0) ...[
+                  _DetailRow(
+                    label: 'Denda Telat',
+                    value: '${currency.format(booking.lateFee)} (${booking.overdueHours} jam)',
+                  ),
+                  _DetailRow(
+                    label: 'Total',
+                    value: currency.format(booking.rentalPrice + booking.lateFee),
+                  ),
+                ],
                 if (booking.notes != null && booking.notes!.isNotEmpty)
                   _DetailRow(label: 'Catatan', value: booking.notes!),
 
@@ -247,7 +258,11 @@ class BookingDetailSheet extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Selesaikan Booking?'),
-        content: const Text('Kendaraan dan supir akan kembali ke status standby.'),
+        content: Text(
+          booking.lateFee > 0
+              ? 'Booking terlambat ${booking.overdueHours} jam. Denda Rp ${booking.lateFee.toStringAsFixed(0)} akan ditambahkan ke total. Kendaraan dan supir kembali standby.'
+              : 'Kendaraan dan supir akan kembali ke status standby.',
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Tidak')),
           ElevatedButton(
