@@ -73,8 +73,15 @@ class BookingViewModel extends ChangeNotifier {
 
   Future<void> loadFormData() async {
     try {
-      readyVehicles = await _vehicleRepo.getReadyVehicles();
-      standbyDrivers = await _driverRepo.getStandbyDrivers();
+      // TASK-01: availability is computed from date-overlap, so the candidate
+      // pool is every bookable vehicle (anything not in maintenance) and every
+      // driver — not just those whose status flag is currently ready/standby.
+      // A vehicle that is out today, or already booked for another date, can
+      // still be booked for a non-overlapping range.
+      final allVehicles = await _vehicleRepo.getAll();
+      readyVehicles =
+          allVehicles.where((v) => v.status != VehicleStatus.maintenance).toList();
+      standbyDrivers = await _driverRepo.getAll();
       notifyListeners();
     } catch (_) {}
   }
@@ -82,9 +89,9 @@ class BookingViewModel extends ChangeNotifier {
   List<VehicleModel> getAvailableVehicles(DateTime? start, DateTime? end) {
     if (start == null || end == null) return readyVehicles;
     return readyVehicles.where((v) {
-      final conflict = activeBookings.any((b) => 
-        b.vehicleId == v.vehicleId && 
-        b.startDateTime.isBefore(end) && 
+      final conflict = activeBookings.any((b) =>
+        b.vehicleId == v.vehicleId &&
+        b.startDateTime.isBefore(end) &&
         b.endDateTime.isAfter(start)
       );
       return !conflict;
@@ -94,9 +101,9 @@ class BookingViewModel extends ChangeNotifier {
   List<DriverModel> getAvailableDrivers(DateTime? start, DateTime? end) {
     if (start == null || end == null) return standbyDrivers;
     return standbyDrivers.where((d) {
-      final conflict = activeBookings.any((b) => 
-        b.driverId == d.driverId && 
-        b.startDateTime.isBefore(end) && 
+      final conflict = activeBookings.any((b) =>
+        b.driverId == d.driverId &&
+        b.startDateTime.isBefore(end) &&
         b.endDateTime.isAfter(start)
       );
       return !conflict;
