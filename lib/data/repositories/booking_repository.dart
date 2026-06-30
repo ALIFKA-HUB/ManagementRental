@@ -108,47 +108,73 @@ class BookingRepository {
     return false;
   }
 
-  /// M-1 fix: atomic create with final status guard inside runTransaction.
+  /// TASK-01: atomic create with availability derived from date-overlap.
+  ///
+  /// Availability is the single source of truth via [checkConflict] (date
+  /// overlap of active bookings) — NOT a global `vehicle.status == in_use`
+  /// flag. A booking for a future date therefore no longer locks the vehicle
+  /// for every other date, so multiple non-overlapping future bookings on the
+  /// same vehicle are allowed.
   ///
   /// Flow:
   ///   1. ViewModel calls checkConflict first → fast UI feedback.
-  ///   2. This method runs a transaction that re-reads vehicle & driver status
-  ///      as the real guard. If another admin grabbed the resource between
-  ///      the conflict check and this write, the transaction aborts with
-  ///      [BookingConflictException] instead of silently double-booking.
+  ///   2. This method re-runs the overlap check right before writing to tighten
+  ///      the window between the UI check and the commit. (Firestore client
+  ///      transactions cannot run queries, so this is the strongest in-SDK
+  ///      guard; a per-slot lock doc / Cloud Function is the full race fix.)
+  ///   3. The transaction only blocks a genuinely unavailable resource
+  ///      (missing or in maintenance) and flags the vehicle/driver as currently
+  ///      out *only* when the booking is active right now.
   Future<String> addWithLog(BookingModel booking, BookingLogModel log) async {
     final vehicleRef = _db.collection('vehicles').doc(booking.vehicleId);
     final driverRef  = _db.collection('drivers').doc(booking.driverId);
 
+    // Final availability guard (date-overlap), as close to the write as possible.
+    final conflict = await checkConflict(
+      vehicleId: booking.vehicleId,
+      driverId: booking.driverId,
+      start: booking.startDateTime,
+      end: booking.endDateTime,
+    );
+    if (conflict) {
+      throw const BookingConflictException(
+          'Jadwal bentrok dengan booking lain. Pilih kendaraan atau supir lain.');
+    }
+
     return await _db.runTransaction<String>((txn) async {
       // --- reads first (Firestore transaction rule) ---
       final vSnap = await txn.get(vehicleRef);
-      final dSnap = await txn.get(driverRef);
 
-      final vStatus = vSnap.data()?['status'] as String?;
-      final dStatus = dSnap.data()?['status'] as String?;
-
-      // Final guard: if resource was grabbed since our conflict check, abort.
-      if (vStatus == VehicleStatus.inUse.value) {
-        throw const BookingConflictException('Kendaraan sudah diambil booking lain. Pilih kendaraan lain.');
+      if (!vSnap.exists) {
+        throw const BookingConflictException('Kendaraan tidak ditemukan.');
       }
-      if (dStatus == DriverStatus.onTrip.value) {
-        throw const BookingConflictException('Supir sudah diambil booking lain. Pilih supir lain.');
+      // Only an actually-unavailable vehicle blocks the booking — not a future
+      // booking's status flag.
+      if ((vSnap.data()?['status'] as String?) == VehicleStatus.maintenance.value) {
+        throw const BookingConflictException('Kendaraan sedang dalam perbaikan.');
       }
 
       // --- writes ---
       final bookingRef = _col.doc();
       txn.set(bookingRef, booking.toFirestore());
-      // ponytail: subcollection log write in same transaction
+      // subcollection log write in same transaction
       txn.set(bookingRef.collection('logs').doc(), log.toFirestore());
-      txn.update(vehicleRef, {
-        'status': VehicleStatus.inUse.value,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      txn.update(driverRef, {
-        'status': DriverStatus.onTrip.value,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+
+      // Reflect "currently out" only when the booking is active right now;
+      // future bookings leave the vehicle/driver bookable for other dates.
+      final now = DateTime.now();
+      final isCurrent =
+          !now.isBefore(booking.startDateTime) && now.isBefore(booking.endDateTime);
+      if (isCurrent) {
+        txn.update(vehicleRef, {
+          'status': VehicleStatus.inUse.value,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        txn.update(driverRef, {
+          'status': DriverStatus.onTrip.value,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       return bookingRef.id;
     });
