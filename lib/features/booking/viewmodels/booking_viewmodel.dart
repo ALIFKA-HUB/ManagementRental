@@ -7,6 +7,7 @@ import 'package:rentalin/data/models/vehicle_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
 import 'package:rentalin/data/repositories/customer_repository.dart';
 import 'package:rentalin/data/repositories/driver_repository.dart';
+import 'package:rentalin/data/repositories/settings_repository.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
 
 enum BookingFilter { all, today, thisWeek }
@@ -16,6 +17,7 @@ class BookingViewModel extends ChangeNotifier {
   final CustomerRepository _customerRepo = CustomerRepository();
   final VehicleRepository _vehicleRepo = VehicleRepository();
   final DriverRepository _driverRepo = DriverRepository();
+  final SettingsRepository _settingsRepo = SettingsRepository();
 
   List<BookingModel> activeBookings = [];
   List<BookingModel> filteredBookings = [];
@@ -23,10 +25,18 @@ class BookingViewModel extends ChangeNotifier {
   List<VehicleModel> readyVehicles = [];
   List<DriverModel> standbyDrivers = [];
 
+  /// TASK-03: turnaround buffer (minutes) loaded from settings/rentalPolicy.
+  int bufferMinutes = 0;
+
   BookingFilter currentFilter = BookingFilter.all;
   bool isLoading = false;
   bool isLoadingHistory = false;
   String? errorMessage;
+
+  /// Best-effort refresh of the configurable turnaround buffer.
+  Future<void> _loadBuffer() async {
+    bufferMinutes = (await _settingsRepo.getRentalPolicy()).bufferMinutes;
+  }
 
   Future<void> loadActiveBookings() async {
     isLoading = true;
@@ -34,6 +44,7 @@ class BookingViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       activeBookings = await _bookingRepo.getActiveBookings();
+      await _loadBuffer();
       _applyFilter();
     } on FirebaseException catch (e, st) {
       debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
@@ -82,17 +93,19 @@ class BookingViewModel extends ChangeNotifier {
       readyVehicles =
           allVehicles.where((v) => v.status != VehicleStatus.maintenance).toList();
       standbyDrivers = await _driverRepo.getAll();
+      await _loadBuffer(); // TASK-03: refresh turnaround buffer
       notifyListeners();
     } catch (_) {}
   }
 
   List<VehicleModel> getAvailableVehicles(DateTime? start, DateTime? end) {
     if (start == null || end == null) return readyVehicles;
+    final buffer = Duration(minutes: bufferMinutes);
     return readyVehicles.where((v) {
       final conflict = activeBookings.any((b) =>
         b.vehicleId == v.vehicleId &&
-        b.startDateTime.isBefore(end) &&
-        b.endDateTime.isAfter(start)
+        b.startDateTime.subtract(buffer).isBefore(end) &&
+        b.endDateTime.add(buffer).isAfter(start)
       );
       return !conflict;
     }).toList();
@@ -100,11 +113,12 @@ class BookingViewModel extends ChangeNotifier {
 
   List<DriverModel> getAvailableDrivers(DateTime? start, DateTime? end) {
     if (start == null || end == null) return standbyDrivers;
+    final buffer = Duration(minutes: bufferMinutes);
     return standbyDrivers.where((d) {
       final conflict = activeBookings.any((b) =>
         b.driverId == d.driverId &&
-        b.startDateTime.isBefore(end) &&
-        b.endDateTime.isAfter(start)
+        b.startDateTime.subtract(buffer).isBefore(end) &&
+        b.endDateTime.add(buffer).isAfter(start)
       );
       return !conflict;
     }).toList();
@@ -167,15 +181,19 @@ class BookingViewModel extends ChangeNotifier {
         return false;
       }
 
-      // Cek bentrok
+      // Cek bentrok (termasuk jeda turnaround / buffer antar booking)
+      await _loadBuffer();
       final conflict = await _bookingRepo.checkConflict(
         vehicleId: vehicle.vehicleId,
         driverId: driver.driverId,
         start: startDateTime,
         end: endDateTime,
+        bufferMinutes: bufferMinutes,
       );
       if (conflict) {
-        errorMessage = 'Jadwal bentrok dengan booking lain. Periksa kendaraan atau supir.';
+        errorMessage = bufferMinutes > 0
+            ? 'Jadwal bentrok atau terlalu dekat (jeda min. $bufferMinutes menit) dengan booking lain.'
+            : 'Jadwal bentrok dengan booking lain. Periksa kendaraan atau supir.';
         isLoading = false;
         notifyListeners();
         return false;
@@ -326,12 +344,14 @@ class BookingViewModel extends ChangeNotifier {
         notifyListeners();
         return false;
       }
+      await _loadBuffer();
       final conflict = await _bookingRepo.checkConflict(
         vehicleId: original.vehicleId,
         driverId: original.driverId,
         start: original.startDateTime,
         end: newEnd,
         excludeBookingId: bookingId,
+        bufferMinutes: bufferMinutes,
       );
       if (conflict) {
         errorMessage = 'Perpanjangan bentrok dengan booking lain.';
