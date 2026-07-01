@@ -1,16 +1,38 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Vehicles — admin only write, authenticated read
-    match /vehicles/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    // Storage rules cannot read Firestore, so admin is identified by a custom
+    // auth claim (set server-side when a user is granted the admin role — see
+    // TASK-08). Token claims are read via request.auth.token.
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return isSignedIn() && request.auth.token.admin == true; }
+    // A valid image upload: an image content-type under 5 MB.
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024;
     }
 
-    // Profiles — user can write their own
+    // Vehicles — authenticated read, admin-only write (create/update/delete),
+    // and uploads must be images < 5 MB. `=**` also covers any nested paths.
+    match /vehicles/{fileName=**} {
+      allow read: if isSignedIn();
+      // Deletes carry no resource body, so only enforce the image check on writes
+      // that actually upload data.
+      allow write: if isAdmin() && (request.resource == null || isValidImage());
+    }
+
+    // Profiles — user can write their own, images only
     match /profiles/{userId}/{fileName} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == userId &&
+                   (request.resource == null || isValidImage());
+    }
+
+    // Everything else is closed by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
