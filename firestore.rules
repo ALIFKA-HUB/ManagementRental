@@ -11,11 +11,19 @@ service cloud.firestore {
     // The driverId linked to the signed-in user (null if unlinked / not a driver).
     function myDriverId() { return isSignedIn() ? userData().driverId : null; }
 
-    // Users: own doc, or admin can read/manage all
+    // Users: own doc, or admin can read/manage all.
+    // TASK-07: a non-admin updating their own doc may NOT change privileged
+    // fields — `role` (self-escalation to admin) or `driverId` (which scopes
+    // booking reads in TASK-05, so changing it would expose another driver's
+    // trips). Those fields are only mutable by an admin.
     match /users/{userId} {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow create: if isAdmin();
-      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow update: if isAdmin() || (
+        isSignedIn() && request.auth.uid == userId &&
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.driverId == resource.data.driverId
+      );
       allow delete: if isAdmin();
     }
 
