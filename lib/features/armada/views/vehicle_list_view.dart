@@ -164,13 +164,27 @@ class _VehicleCard extends StatelessWidget {
     );
   }
 
-  Widget _photoPlaceholder() => Container(
-        width: 72,
-        height: 72,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(12),
+  Widget _photoPlaceholder() {
+    final plate = vehicle.plateNumber.isNotEmpty ? vehicle.plateNumber : '???';
+    return Container(
+      width: 72,
+      height: 72,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceMutedDark,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.surfaceMutedLight, width: 2),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        plate,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
+          fontSize: 12,
         ),
-        child: const Icon(Icons.directions_car, color: Colors.grey, size: 36),
-      );
+      ),
+    );
+  }
 }
