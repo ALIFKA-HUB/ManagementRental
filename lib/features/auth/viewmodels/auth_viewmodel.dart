@@ -46,7 +46,17 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   Future<void> loadCurrentUser(String uid) async {
-    currentUser = await _repo.getUserModel(uid);
+    final userModel = await _repo.getUserModel(uid);
+    // TASK-08: if the Firestore profile is gone (e.g. driver was deleted) but
+    // the Auth session is still alive, sign out so the account can't linger in
+    // a half-authenticated state.
+    if (userModel == null) {
+      await _repo.signOut();
+      currentUser = null;
+      notifyListeners();
+      return;
+    }
+    currentUser = userModel;
     notifyListeners();
   }
 
