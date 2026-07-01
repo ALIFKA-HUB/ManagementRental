@@ -110,7 +110,7 @@ class AppTheme {
         elevation: 0,
         height: 64,
         surfaceTintColor: Colors.transparent,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide, // Hapus info navbar kayak home dst
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow, // Hapus info navbar kayak home dst -> sekarang alwaysShow
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           // Pertebal warna icon (Hitam pekat untuk aktif, abu-abu untuk tidak aktif)

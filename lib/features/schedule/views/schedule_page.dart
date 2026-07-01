@@ -39,7 +39,25 @@ class _ScheduleContent extends StatelessWidget {
     final fmt = DateFormat('EEEE, dd MMMM yyyy', 'id');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Jadwal')),
+      appBar: AppBar(
+        title: const Text('Jadwal'),
+        actions: [
+          if (isAdmin)
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Buat Booking',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider(
+                    create: (_) => BookingViewModel()..loadActiveBookings(),
+                    child: const BookingFormPage(),
+                  ),
+                ),
+              ).then((_) => vm.loadMonth(vm.focusedDay)),
+            ),
+        ],
+      ),
       body: Column(
         children: [
           // Kalender
@@ -121,24 +139,6 @@ class _ScheduleContent extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: isAdmin
-          ? FloatingActionButton.extended(
-              heroTag: 'schedule_fab',
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.black,
-              icon: const Icon(Icons.add),
-              label: const Text('Buat Booking'),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider(
-                    create: (_) => BookingViewModel()..loadActiveBookings(),
-                    child: const BookingFormPage(),
-                  ),
-                ),
-              ).then((_) => vm.loadMonth(vm.focusedDay)),
-            )
-          : null,
     );
   }
 }

@@ -29,6 +29,21 @@ class _BookingPageContent extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Booking'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              tooltip: 'Buat Booking',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ChangeNotifierProvider.value(
+                    value: vm,
+                    child: const BookingFormPage(),
+                  ),
+                ),
+              ).then((_) => vm.loadActiveBookings()),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Aktif'),
@@ -42,22 +57,7 @@ class _BookingPageContent extends StatelessWidget {
             BookingListView(isHistory: true),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.black,
-          icon: const Icon(Icons.add),
-          label: const Text('Buat Booking'),
-          onPressed: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ChangeNotifierProvider.value(
-                value: vm,
-                child: const BookingFormPage(),
-              ),
-            ),
-          ).then((_) => vm.loadActiveBookings()),
         ),
-      ),
     );
   }
 }
