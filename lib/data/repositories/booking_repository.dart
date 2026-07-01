@@ -87,6 +87,7 @@ class BookingRepository {
     required DateTime start,
     required DateTime end,
     String? excludeBookingId,
+    int bufferMinutes = 0,
   }) async {
     // Firestore tidak mendukung multiple inequality filters di field yang berbeda (start & end).
     // Jadi kita query statusnya saja, lalu filter tanggalnya secara lokal.
@@ -94,13 +95,20 @@ class BookingRepository {
         .where('bookingStatus', whereIn: ['upcoming', 'active'])
         .get();
 
+    // TASK-03: expand each existing booking by the turnaround buffer on both
+    // sides, so a new booking that starts within `bufferMinutes` of another
+    // booking's end (or ends that close to another's start) is treated as a
+    // conflict.
+    final buffer = Duration(minutes: bufferMinutes);
+
     for (final doc in snap.docs) {
       if (excludeBookingId != null && doc.id == excludeBookingId) continue;
       final b = BookingModel.fromFirestore(doc);
-      
-      // Cek apakah tanggal tumpang tindih (overlap)
-      final bool isOverlap = b.startDateTime.isBefore(end) && b.endDateTime.isAfter(start);
-      
+
+      // Cek apakah tanggal tumpang tindih (overlap) termasuk buffer
+      final bool isOverlap = b.startDateTime.subtract(buffer).isBefore(end) &&
+          b.endDateTime.add(buffer).isAfter(start);
+
       if (isOverlap) {
         if (b.vehicleId == vehicleId || b.driverId == driverId) return true;
       }

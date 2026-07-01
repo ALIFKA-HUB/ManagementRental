@@ -52,6 +52,13 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // Settings (rental policy: buffer time, etc.) — authenticated read, admin write
+    match /settings/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // Sementara koleksi lain ditutup — akan dibuka per phase
     match /{document=**} {
       allow read, write: if false;
