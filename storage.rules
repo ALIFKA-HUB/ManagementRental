@@ -1,36 +1,10 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    // ── Helpers ────────────────────────────────────────────────────────────
-    // Storage rules cannot read Firestore, so admin is identified by a custom
-    // auth claim (set server-side when a user is granted the admin role — see
-    // TASK-08). Token claims are read via request.auth.token.
-    function isSignedIn() { return request.auth != null; }
-    function isAdmin() { return isSignedIn() && request.auth.token.admin == true; }
-    // A valid image upload: an image content-type under 5 MB.
-    function isValidImage() {
-      return request.resource.contentType.matches('image/.*') &&
-             request.resource.size < 5 * 1024 * 1024;
-    }
-
-    // Vehicles — authenticated read, admin-only write (create/update/delete),
-    // and uploads must be images < 5 MB. `=**` also covers any nested paths.
-    match /vehicles/{fileName=**} {
-      allow read: if isSignedIn();
-      // Deletes carry no resource body, so only enforce the image check on writes
-      // that actually upload data.
-      allow write: if isAdmin() && (request.resource == null || isValidImage());
-    }
-
-    // Profiles — user can write their own, images only
-    match /profiles/{userId}/{fileName} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && request.auth.uid == userId &&
-                   (request.resource == null || isValidImage());
-    }
-
-    // Everything else is closed by default.
+    // This app does NOT use Firebase Storage (no photo/file uploads).
+    // Storage is intentionally left unused to avoid requiring the Blaze plan.
+    // Deny everything so that, if Storage is ever enabled by accident, no data
+    // is exposed. Re-open specific paths here if file uploads are added later.
     match /{allPaths=**} {
       allow read, write: if false;
     }
