@@ -39,31 +39,7 @@ class VehicleListView extends StatelessWidget {
       );
     }
 
-    return Stack(
-      children: [
-        content,
-        if (isAdmin)
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: FloatingActionButton.extended(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.black,
-              icon: const Icon(Icons.add),
-              label: const Text('Tambah Kendaraan'),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: vm,
-                    child: const VehicleFormPage(),
-                  ),
-                ),
-              ).then((_) => vm.loadVehicles()),
-            ),
-          ),
-      ],
-    );
+    return content;
   }
 }
 

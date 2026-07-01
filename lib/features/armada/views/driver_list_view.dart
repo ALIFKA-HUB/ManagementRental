@@ -36,31 +36,7 @@ class DriverListView extends StatelessWidget {
       );
     }
 
-    return Stack(
-      children: [
-        content,
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton.extended(
-            heroTag: 'add_driver_fab',
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.black,
-            icon: const Icon(Icons.person_add),
-            label: const Text('Tambah Supir'),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider.value(
-                  value: vm,
-                  child: const DriverFormPage(),
-                ),
-              ),
-            ).then((_) => vm.loadDrivers()),
-          ),
-        ),
-      ],
-    );
+    return content;
   }
 }
 
