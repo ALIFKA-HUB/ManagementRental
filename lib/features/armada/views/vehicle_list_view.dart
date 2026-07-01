@@ -31,7 +31,7 @@ class VehicleListView extends StatelessWidget {
       content = ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: vm.vehicles.length,
-        separatorBuilder: (_, _a) => const SizedBox(height: 10),
+        separatorBuilder: (_, _a) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
           final v = vm.vehicles[i];
           return _VehicleCard(vehicle: v, isAdmin: isAdmin);
@@ -90,8 +90,13 @@ class _VehicleCard extends StatelessWidget {
         }
       },
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        ),
+        elevation: 0,
+        color: Theme.of(context).colorScheme.surface,
+        margin: EdgeInsets.zero,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: isAdmin
@@ -139,13 +144,17 @@ class _VehicleCard extends StatelessWidget {
                   ),
                 ),
                 if (isAdmin)
-                  IconButton(
-                    icon: Icon(
-                      vehicle.status == VehicleStatus.ready ? Icons.build_outlined : Icons.check_circle_outline,
-                      color: vehicle.status == VehicleStatus.ready ? AppColors.warning : AppColors.success,
-                    ),
-                    tooltip: vehicle.status == VehicleStatus.ready ? 'Set Bengkel' : 'Set Ready',
-                    onPressed: () => vm.toggleStatus(vehicle),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (val) {
+                      if (val == 'status') vm.toggleStatus(vehicle);
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'status',
+                        child: Text(vehicle.status == VehicleStatus.ready ? 'Set Bengkel' : 'Set Ready'),
+                      ),
+                    ],
                   ),
               ],
             ),
