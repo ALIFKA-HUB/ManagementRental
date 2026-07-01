@@ -39,14 +39,52 @@ class _OperatorHomeContent extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        titleSpacing: 16,
+        title: Row(
           children: [
-            Text('Halo, ${auth.currentUser?.displayName ?? 'Operator'}!',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            Text(dateFmt.format(now), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: AppColors.primary.withOpacity(0.1),
+              child: const Icon(Icons.person, size: 20, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Halo, ${auth.currentUser?.displayName ?? 'Operator'}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(dateFmt.format(now), style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+            tooltip: 'Keluar',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Keluar?'),
+                  content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true && context.mounted) {
+                context.read<AuthViewModel>().logout();
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: vm.isLoading && vm.todayBookings.isEmpty && vm.upcomingBookings.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -122,41 +160,6 @@ class _OperatorHomeContent extends StatelessWidget {
                       ),
                     ],
 
-                    const SizedBox(height: 24),
-
-                    // ── Logout ────────────────────────────────────────────────
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.error),
-                          foregroundColor: AppColors.error,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Keluar', style: TextStyle(fontWeight: FontWeight.w600)),
-                        onPressed: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Keluar?'),
-                              content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (confirm == true && context.mounted) {
-                            context.read<AuthViewModel>().logout();
-                          }
-                        },
-                      ),
-                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -247,85 +250,117 @@ class _TripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: isHighlighted ? 3 : 1,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final theme = Theme.of(context);
+    final isLast = !isHighlighted; // Simplification just to have some line logic, ideally we pass isLast from ListView
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Jam
+          SizedBox(
+            width: 50,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 2),
+                Text(timeFmt.format(booking.startDateTime), style: theme.textTheme.titleSmall),
+                Text(timeFmt.format(booking.endDateTime), style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Garis Timeline
+          Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      booking.customerName,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  AppChip(label: booking.effectiveStatusLabel),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              // Waktu
-              Row(
-                children: [
-                  const Icon(Icons.schedule, size: 15, color: Colors.grey),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${timeFmt.format(booking.startDateTime)} - ${timeFmt.format(booking.endDateTime)}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-
-              // Kendaraan
-              if (booking.vehicleName.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.directions_car, size: 15, color: Colors.grey),
-                    const SizedBox(width: 6),
-                    Text('${booking.vehicleName} • ${booking.vehiclePlate}',
-                        style: Theme.of(context).textTheme.bodySmall),
-                  ],
+              Container(
+                width: 12, height: 12,
+                margin: const EdgeInsets.only(top: 6),
+                decoration: BoxDecoration(
+                  color: isHighlighted ? AppColors.primary : Colors.grey.shade400,
+                  shape: BoxShape.circle,
                 ),
-              ],
-
-              // Rute
-              if (booking.routes.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.route, size: 15, color: Colors.grey),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        booking.routes.join(' -> '),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+              ),
+              Expanded(
+                child: Container(
+                  width: 2,
+                  color: (isHighlighted ? AppColors.primary : Colors.grey.shade400).withOpacity(0.3),
                 ),
-              ],
-
-              // Customer phone
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.phone_outlined, size: 15, color: Colors.grey),
-                  const SizedBox(width: 6),
-                  Text(booking.customerPhone, style: Theme.of(context).textTheme.bodySmall),
-                ],
               ),
             ],
           ),
-        ),
+          const SizedBox(width: 16),
+          // Konten
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isHighlighted ? AppColors.primary.withOpacity(0.5) : theme.colorScheme.outline),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              booking.customerName,
+                              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          AppChip(label: booking.effectiveStatusLabel),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (booking.vehicleName.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            const Icon(Icons.directions_car, size: 15, color: Colors.grey),
+                            const SizedBox(width: 6),
+                            Text('${booking.vehicleName} • ${booking.vehiclePlate}',
+                                style: theme.textTheme.bodySmall),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      if (booking.routes.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            const Icon(Icons.route, size: 15, color: Colors.grey),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                booking.routes.join(' -> '),
+                                style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      Row(
+                        children: [
+                          const Icon(Icons.phone_outlined, size: 15, color: Colors.grey),
+                          const SizedBox(width: 6),
+                          Text(booking.customerPhone, style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

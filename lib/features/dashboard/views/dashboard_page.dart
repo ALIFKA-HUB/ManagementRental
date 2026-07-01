@@ -40,315 +40,203 @@ class _DashboardContent extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        titleSpacing: AppSpacing.lg,
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: AppColors.primary.withOpacity(0.1),
+              child: const Icon(Icons.person, size: 20, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Halo, ${auth.currentUser?.displayName ?? 'Admin'}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(dateFmt.format(now), style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+            tooltip: 'Keluar',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Keluar?'),
+                  content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true && context.mounted) {
+                context.read<AuthViewModel>().logout();
+              }
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: vm.isLoading && vm.stats == null
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: vm.load,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
+              child: ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Profile Card ─────────────────────────────────────
-                    _ProfileCard(
-                      name: auth.currentUser?.displayName ?? 'Admin',
-                      role: auth.currentUser?.role.name.toUpperCase() ?? 'ADMIN',
-                      date: dateFmt.format(now),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // ── Revenue ──────────────────────────────────────────
-                    if (vm.stats != null) ...[
-                      Row(
+                children: [
+                  if (vm.stats != null) ...[
+                    // HERO METRIC
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(AppRadius.card),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: _RevenueCard(
-                              label: 'Pendapatan Hari Ini',
-                              value: currency.format(vm.stats!.todayRevenue),
-                              icon: Icons.trending_up_rounded,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: _RevenueCard(
-                              label: 'Pendapatan Bulan Ini',
-                              value: currency.format(vm.stats!.monthRevenue),
-                              icon: Icons.calendar_month_rounded,
-                            ),
-                          ),
+                          const Text('Pendapatan Hari Ini', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                          const SizedBox(height: 8),
+                          Text(currency.format(vm.stats!.todayRevenue), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
                         ],
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
 
-                      // ── Stat grid ──────────────────────────────────────
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: AppSpacing.md,
-                        mainAxisSpacing: AppSpacing.md,
-                        childAspectRatio: 1.7,
+                    // SECONDARY METRICS (Compact Row)
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
                         children: [
-                          _StatCard(
-                            label: 'Booking Aktif',
-                            value: '${vm.stats!.activeBookings}',
-                            icon: Icons.receipt_long_rounded,
-                            accent: AppColors.primary,
-                          ),
-                          _StatCard(
-                            label: 'Belum Lunas',
-                            value: '${vm.stats!.pendingPayment}',
-                            icon: Icons.payments_outlined,
-                            accent: AppColors.warning,
-                          ),
-                          _StatCard(
-                            label: 'Kendaraan Siap',
-                            value: '${vm.stats!.readyVehicles}/${vm.stats!.totalVehicles}',
-                            icon: Icons.directions_car_rounded,
-                            accent: AppColors.success,
-                          ),
-                          _StatCard(
-                            label: 'Supir Standby',
-                            value: '${vm.stats!.standbyDrivers}/${vm.stats!.totalDrivers}',
-                            icon: Icons.person_rounded,
-                            accent: AppColors.secondary,
-                          ),
-                          _StatCard(
-                            label: 'Terlambat',
-                            value: '${vm.stats!.overdueBookings}',
-                            icon: Icons.timer_off_outlined,
-                            accent: AppColors.error,
-                          ),
+                          _CompactStat(label: 'Bulan Ini', value: currency.format(vm.stats!.monthRevenue), icon: Icons.calendar_month),
+                          const SizedBox(width: AppSpacing.sm),
+                          _CompactStat(label: 'Booking Aktif', value: '${vm.stats!.activeBookings}', icon: Icons.receipt_long, color: AppColors.primary),
+                          const SizedBox(width: AppSpacing.sm),
+                          _CompactStat(label: 'Belum Lunas', value: '${vm.stats!.pendingPayment}', icon: Icons.payments, color: AppColors.warning),
+                          const SizedBox(width: AppSpacing.sm),
+                          _CompactStat(label: 'Mobil Siap', value: '${vm.stats!.readyVehicles}/${vm.stats!.totalVehicles}', icon: Icons.directions_car, color: AppColors.success),
+                          const SizedBox(width: AppSpacing.sm),
+                          _CompactStat(label: 'Supir Standby', value: '${vm.stats!.standbyDrivers}/${vm.stats!.totalDrivers}', icon: Icons.person, color: AppColors.secondary),
                         ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // COMMAND ROW (Quick Actions)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.add_circle_outline),
+                          label: const Text('Buat Booking'),
+                          onPressed: () {
+                            final bookingVm = BookingViewModel()..loadActiveBookings();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChangeNotifierProvider.value(
+                                  value: bookingVm,
+                                  child: const BookingFormPage(),
+                                ),
+                              ),
+                            ).then((_) => vm.load());
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.directions_car_outlined),
+                          label: const Text('Kelola Armada'),
+                          onPressed: onGoToArmada ?? () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ArmadaPage()),
+                          ),
+                        ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
 
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // ── Quick Actions ────────────────────────────────────
-                    const AppSectionHeader(title: 'Aksi Cepat'),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _QuickAction(
-                            icon: Icons.add_circle_outline_rounded,
-                            label: 'Buat Booking',
-                            onTap: () {
-                              final bookingVm = BookingViewModel()..loadActiveBookings();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ChangeNotifierProvider.value(
-                                    value: bookingVm,
-                                    child: const BookingFormPage(),
-                                  ),
-                                ),
-                              ).then((_) => vm.load());
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: _QuickAction(
-                            icon: Icons.directions_car_outlined,
-                            label: 'Kelola Armada',
-                            onTap: onGoToArmada ?? () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const ArmadaPage()),
+                  // TIMELINE JADWAL
+                  AppSectionHeader(
+                    title: 'Jadwal Hari Ini',
+                    trailing: vm.upcomingToday.isEmpty
+                        ? null
+                        : Text('${vm.upcomingToday.length} trip',
+                            style: Theme.of(context).textTheme.bodySmall),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  if (vm.upcomingToday.isEmpty)
+                    _EmptyToday()
+                  else
+                    ...vm.upcomingToday.asMap().entries.map((e) {
+                      final isLast = e.key == vm.upcomingToday.length - 1;
+                      return _TimelineBookingCard(
+                        booking: e.value,
+                        isLast: isLast,
+                        onTap: () {
+                          final dashVm = context.read<DashboardViewModel>();
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (_) => ChangeNotifierProvider(
+                              create: (_) => BookingViewModel()..loadActiveBookings(),
+                              child: BookingDetailSheet(booking: e.value, isAdmin: true),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // ── Jadwal Hari Ini ──────────────────────────────────
-                    AppSectionHeader(
-                      title: 'Jadwal Hari Ini',
-                      trailing: vm.upcomingToday.isEmpty
-                          ? null
-                          : Text('${vm.upcomingToday.length} trip',
-                              style: Theme.of(context).textTheme.bodySmall),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-
-                    if (vm.upcomingToday.isEmpty)
-                      _EmptyToday()
-                    else
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: vm.upcomingToday.length,
-                        separatorBuilder: (_, _a) => const SizedBox(height: AppSpacing.sm),
-                        itemBuilder: (context, i) {
-                          final b = vm.upcomingToday[i];
-                          return _TodayBookingCard(
-                            booking: b,
-                            onTap: () {
-                              final dashVm = context.read<DashboardViewModel>();
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (_) => ChangeNotifierProvider(
-                                  create: (_) => BookingViewModel()..loadActiveBookings(),
-                                  child: BookingDetailSheet(booking: b, isAdmin: true),
-                                ),
-                              ).then((_) => dashVm.load());
-                            },
-                          );
+                          ).then((_) => dashVm.load());
                         },
-                      ),
-
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // ── Logout ───────────────────────────────────────────
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: AppColors.error),
-                        foregroundColor: AppColors.error,
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                      icon: const Icon(Icons.logout_rounded, size: 20),
-                      label: const Text('Keluar'),
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Keluar?'),
-                            content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, true),
-                                child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirm == true && context.mounted) {
-                          context.read<AuthViewModel>().logout();
-                        }
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                  ],
-                ),
+                      );
+                    }),
+                ],
               ),
             ),
     );
   }
 }
 
-// ── Sub-Widgets ───────────────────────────────────────────────────────────────
-
-class _RevenueCard extends StatelessWidget {
+class _CompactStat extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
+  final Color color;
 
-  const _RevenueCard({required this.label, required this.value, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: theme.colorScheme.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: AppColors.textSecondaryLight, size: 18),
-          const SizedBox(height: AppSpacing.md),
-          Text(value, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: AppSpacing.xs),
-          Text(label, style: theme.textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color accent;
-
-  const _StatCard({required this.label, required this.value, required this.icon, required this.accent});
+  const _CompactStat({required this.label, required this.value, required this.icon, this.color = AppColors.textSecondaryLight});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: theme.colorScheme.outline),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).colorScheme.outline),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(AppRadius.button),
-            ),
-            child: Icon(icon, color: accent, size: 20),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(value, style: theme.textTheme.titleLarge),
-                Text(label, style: theme.textTheme.bodySmall, overflow: TextOverflow.ellipsis),
-              ],
-            ),
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              Text(label, style: Theme.of(context).textTheme.bodySmall),
+            ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _QuickAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickAction({required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.card),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: theme.colorScheme.outline),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: theme.colorScheme.onSurface, size: 26),
-            const SizedBox(height: AppSpacing.sm),
-            Text(label, style: theme.textTheme.labelLarge),
-          ],
-        ),
       ),
     );
   }
@@ -357,136 +245,104 @@ class _QuickAction extends StatelessWidget {
 class _EmptyToday extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppRadius.card),
       ),
       child: Column(
         children: [
-          Icon(Icons.event_available_outlined, color: AppColors.textSecondaryLight, size: 28),
+          const Icon(Icons.event_available_outlined, color: AppColors.textSecondaryLight, size: 28),
           const SizedBox(height: AppSpacing.sm),
-          Text('Tidak ada jadwal hari ini', style: theme.textTheme.bodyMedium),
+          Text('Tidak ada jadwal hari ini', style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );
   }
 }
 
-class _TodayBookingCard extends StatelessWidget {
+class _TimelineBookingCard extends StatelessWidget {
   final BookingModel booking;
+  final bool isLast;
   final VoidCallback onTap;
 
-  const _TodayBookingCard({required this.booking, required this.onTap});
+  const _TimelineBookingCard({required this.booking, required this.isLast, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final timeFmt = DateFormat('HH:mm', 'id');
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: theme.colorScheme.outline),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              Column(
-                children: [
-                  Text(timeFmt.format(booking.startDateTime),
-                      style: theme.textTheme.titleSmall),
-                  Icon(Icons.more_vert, size: 14, color: theme.colorScheme.outline),
-                  Text(timeFmt.format(booking.endDateTime), style: theme.textTheme.bodySmall),
-                ],
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Container(
-                width: 3,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(booking.customerName, style: theme.textTheme.titleSmall),
-                    const SizedBox(height: 2),
-                    Text('${booking.vehicleName} • ${booking.driverName}',
-                        style: theme.textTheme.bodySmall),
-                    if (booking.routes.isNotEmpty)
-                      Text(booking.routes.join(' -> '),
-                          style: theme.textTheme.bodySmall, overflow: TextOverflow.ellipsis),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              AppChip(label: booking.effectiveStatusLabel),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProfileCard extends StatelessWidget {
-  final String name;
-  final String role;
-  final String date;
-
-  const _ProfileCard({required this.name, required this.role, required this.date});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-      ),
+    return IntrinsicHeight(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: AppColors.surfaceMutedLight,
-            child: Icon(Icons.person, size: 32, color: AppColors.textSecondaryLight),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
+          // Jam
+          SizedBox(
+            width: 50,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Halo, $name!', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(date, style: theme.textTheme.bodySmall),
+                const SizedBox(height: 2),
+                Text(timeFmt.format(booking.startDateTime), style: theme.textTheme.titleSmall),
+                Text(timeFmt.format(booking.endDateTime), style: theme.textTheme.bodySmall),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(AppRadius.chip),
-            ),
-            child: Text(
-              role,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+          const SizedBox(width: 8),
+          // Garis Timeline
+          Column(
+            children: [
+              Container(
+                width: 12, height: 12,
+                margin: const EdgeInsets.only(top: 6),
+                decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: AppColors.primary.withOpacity(0.3),
+                  ),
+                )
+              else 
+                const Expanded(child: SizedBox()),
+            ],
+          ),
+          const SizedBox(width: 16),
+          // Konten
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: theme.colorScheme.outline),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: Text(booking.customerName, style: theme.textTheme.titleSmall)),
+                          AppChip(label: booking.effectiveStatusLabel),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text('${booking.vehicleName} • ${booking.driverName}', style: theme.textTheme.bodySmall),
+                      if (booking.routes.isNotEmpty)
+                        Text(booking.routes.join(' -> '), style: theme.textTheme.bodySmall?.copyWith(color: AppColors.textSecondaryLight), overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
