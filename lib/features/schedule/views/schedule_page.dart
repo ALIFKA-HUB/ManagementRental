@@ -191,9 +191,10 @@ class _ScheduleBookingCard extends StatelessWidget {
                   children: [
                     Text(booking.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 2),
-                    Text('${booking.vehicleName} · ${booking.driverName}', style: Theme.of(context).textTheme.bodySmall),
+                    Text('${booking.vehicleName} • ${booking.driverName}', style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(height: 2),
                     if (booking.routes.isNotEmpty)
-                      Text(booking.routes.join(' → '), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey), overflow: TextOverflow.ellipsis),
+                      Text(booking.routes.join(' -> '), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey), overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),

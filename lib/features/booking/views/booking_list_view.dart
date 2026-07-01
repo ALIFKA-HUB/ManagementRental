@@ -172,11 +172,11 @@ class _BookingCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              _InfoRow(icon: Icons.directions_car, text: '${booking.vehicleName} · ${booking.vehiclePlate}'),
+              _InfoRow(icon: Icons.directions_car, text: '${booking.vehicleName} • ${booking.vehiclePlate}'),
               _InfoRow(icon: Icons.person, text: booking.driverName),
-              _InfoRow(icon: Icons.schedule, text: '${fmt.format(booking.startDateTime)} → ${fmt.format(booking.endDateTime)}'),
+              _InfoRow(icon: Icons.schedule, text: '${fmt.format(booking.startDateTime)} - ${fmt.format(booking.endDateTime)}'),
               if (booking.routes.isNotEmpty)
-                _InfoRow(icon: Icons.route, text: booking.routes.join(' → ')),
+                _InfoRow(icon: Icons.route, text: booking.routes.join(' -> ')),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

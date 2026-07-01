@@ -29,7 +29,7 @@ class BookingRepository {
     final start = DateTime(year, month, 1);
     final end = DateTime(year, month + 1, 1);
 
-    // M-7: Both inequalities on same field → no composite index needed.
+    // M-7: Both inequalities on same field -> no composite index needed.
     // TASK-04: use a 366-day lower bound so a long-running rental that STARTED
     // in a previous period but still spans the viewed month is not missed
     // (the old 90-day bound dropped such bookings). Still bounds the scan.
@@ -150,7 +150,7 @@ class BookingRepository {
   /// same vehicle are allowed.
   ///
   /// Flow:
-  ///   1. ViewModel calls checkConflict first → fast UI feedback.
+  ///   1. ViewModel calls checkConflict first -> fast UI feedback.
   ///   2. This method re-runs the overlap check right before writing to tighten
   ///      the window between the UI check and the commit. (Firestore client
   ///      transactions cannot run queries, so this is the strongest in-SDK
