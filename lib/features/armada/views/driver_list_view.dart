@@ -28,7 +28,7 @@ class DriverListView extends StatelessWidget {
       content = ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: vm.drivers.length,
-        separatorBuilder: (_, _a) => const SizedBox(height: 10),
+        separatorBuilder: (_, _a) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
           final d = vm.drivers[i];
           return _DriverCard(driver: d);
@@ -86,8 +86,13 @@ class _DriverCard extends StatelessWidget {
         }
       },
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        ),
+        elevation: 0,
+        color: Theme.of(context).colorScheme.surface,
+        margin: EdgeInsets.zero,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () => Navigator.push(

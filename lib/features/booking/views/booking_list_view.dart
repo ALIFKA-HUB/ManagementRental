@@ -85,7 +85,7 @@ class _BookingListViewState extends State<BookingListView> {
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
                         itemCount: vm.filteredBookings.length,
-                        separatorBuilder: (_, _a) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _a) => const SizedBox(height: 8),
                         itemBuilder: (context, i) {
                           final b = vm.filteredBookings[i];
                           return _BookingCard(booking: b, isAdmin: isAdmin);
@@ -115,7 +115,7 @@ class _BookingListViewState extends State<BookingListView> {
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: vm.historyBookings.length,
-        separatorBuilder: (_, _a) => const SizedBox(height: 10),
+        separatorBuilder: (_, _a) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
           final b = vm.historyBookings[i];
           return _BookingCard(booking: b, isAdmin: isAdmin);
@@ -139,8 +139,13 @@ class _BookingCard extends StatelessWidget {
     final currency = NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0);
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surface,
+      margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
