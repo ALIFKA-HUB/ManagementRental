@@ -62,7 +62,7 @@ class BookingDetailSheet extends StatelessWidget {
                 _DetailRow(label: 'Mulai', value: fmt.format(booking.startDateTime)),
                 _DetailRow(label: 'Selesai', value: fmt.format(booking.endDateTime)),
                 if (booking.routes.isNotEmpty)
-                  _DetailRow(label: 'Rute', value: booking.routes.join(' → ')),
+                  _DetailRow(label: 'Rute', value: booking.routes.join(' -> ')),
                 _DetailRow(label: 'Harga', value: currency.format(booking.rentalPrice)),
                 _DetailRow(label: 'Pembayaran', value: booking.paymentStatus.label),
                 // TASK-02: surface the automatic late-return surcharge.
@@ -227,7 +227,7 @@ class BookingDetailSheet extends StatelessWidget {
               onPressed: () async {
                 if (newEnd == null) return;
                 Navigator.pop(ctx);
-                // M-4: strip non-digits to fix Indonesian "10.000" → 10000 parsing
+                // M-4: strip non-digits to fix Indonesian "10.000" -> 10000 parsing
                 final extra = double.tryParse(extraCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
                 final ok = await vm.extendBooking(
                   bookingId: booking.bookingId,

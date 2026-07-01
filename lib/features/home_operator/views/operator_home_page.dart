@@ -42,7 +42,7 @@ class _OperatorHomeContent extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Halo, ${auth.currentUser?.displayName ?? 'Operator'}! 👋',
+            Text('Halo, ${auth.currentUser?.displayName ?? 'Operator'}!',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             Text(dateFmt.format(now), style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
@@ -277,7 +277,7 @@ class _TripCard extends StatelessWidget {
                   const Icon(Icons.schedule, size: 15, color: Colors.grey),
                   const SizedBox(width: 6),
                   Text(
-                    '${timeFmt.format(booking.startDateTime)} → ${timeFmt.format(booking.endDateTime)}',
+                    '${timeFmt.format(booking.startDateTime)} - ${timeFmt.format(booking.endDateTime)}',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
@@ -290,7 +290,7 @@ class _TripCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.directions_car, size: 15, color: Colors.grey),
                     const SizedBox(width: 6),
-                    Text('${booking.vehicleName} · ${booking.vehiclePlate}',
+                    Text('${booking.vehicleName} • ${booking.vehiclePlate}',
                         style: Theme.of(context).textTheme.bodySmall),
                   ],
                 ),
@@ -305,7 +305,7 @@ class _TripCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        booking.routes.join(' → '),
+                        booking.routes.join(' -> '),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
                         overflow: TextOverflow.ellipsis,
                       ),

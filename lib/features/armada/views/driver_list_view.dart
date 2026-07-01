@@ -147,7 +147,7 @@ class _DriverCard extends StatelessWidget {
                     children: [
                       Text(driver.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 2),
-                      Text('ID: ${driver.codeId}  ·  ${driver.phone}', style: Theme.of(context).textTheme.bodyMedium),
+                      Text('ID: ${driver.codeId}  •  ${driver.phone}', style: Theme.of(context).textTheme.bodyMedium),
                     ],
                   ),
                 ),

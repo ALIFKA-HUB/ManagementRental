@@ -57,7 +57,7 @@ class BookingModel {
   final BookingStatus bookingStatus;
 
   /// M-8: Compute effective status from current time — no scheduler needed.
-  /// upcoming → active when startDateTime <= now < endDateTime.
+  /// upcoming -> active when startDateTime <= now < endDateTime.
   BookingStatus get effectiveStatus {
     if (bookingStatus == BookingStatus.completed || bookingStatus == BookingStatus.cancelled) {
       return bookingStatus;
@@ -93,7 +93,7 @@ class BookingModel {
   double get lateFee => overdueHours * BookingPolicy.lateFeePerHour;
 
   /// Status label that reflects real time: "Terlambat" when overdue, otherwise
-  /// the effective (upcoming→active) status label.
+  /// the effective (upcoming->active) status label.
   String get effectiveStatusLabel =>
       isOverdue ? 'Terlambat' : effectiveStatus.label;
 

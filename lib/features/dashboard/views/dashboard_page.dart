@@ -424,10 +424,10 @@ class _TodayBookingCard extends StatelessWidget {
                   children: [
                     Text(booking.customerName, style: theme.textTheme.titleSmall),
                     const SizedBox(height: 2),
-                    Text('${booking.vehicleName} · ${booking.driverName}',
+                    Text('${booking.vehicleName} • ${booking.driverName}',
                         style: theme.textTheme.bodySmall),
                     if (booking.routes.isNotEmpty)
-                      Text(booking.routes.join(' → '),
+                      Text(booking.routes.join(' -> '),
                           style: theme.textTheme.bodySmall, overflow: TextOverflow.ellipsis),
                   ],
                 ),
@@ -470,7 +470,7 @@ class _ProfileCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Halo, $name! 👋', style: theme.textTheme.titleMedium),
+                Text('Halo, $name!', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 4),
                 Text(date, style: theme.textTheme.bodySmall),
               ],
