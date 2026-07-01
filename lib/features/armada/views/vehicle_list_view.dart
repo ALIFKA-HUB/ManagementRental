@@ -6,6 +6,7 @@ import 'package:rentalin/core/widgets/app_empty_state.dart';
 import 'package:rentalin/data/models/vehicle_model.dart';
 import 'package:rentalin/features/armada/viewmodels/vehicle_viewmodel.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
+import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'vehicle_form_page.dart';
 
 class VehicleListView extends StatelessWidget {
@@ -17,7 +18,7 @@ class VehicleListView extends StatelessWidget {
     final isAdmin = context.watch<AuthViewModel>().currentUser?.isAdmin ?? false;
 
     if (vm.isLoading && vm.vehicles.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton();
     }
 
     Widget content;

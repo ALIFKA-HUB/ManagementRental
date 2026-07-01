@@ -5,6 +5,7 @@ import 'package:rentalin/core/theme/app_colors.dart';
 import 'package:rentalin/core/widgets/app_button.dart';
 import 'package:rentalin/core/widgets/app_input.dart';
 import 'package:rentalin/core/widgets/customer_autocomplete.dart';
+import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'package:rentalin/core/widgets/multi_stop_input.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/models/driver_model.dart';
@@ -148,7 +149,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Buat Booking')),
       body: !_formDataLoaded
-          ? const Center(child: CircularProgressIndicator())
+          ? const _FormSkeleton()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -285,6 +286,41 @@ class _DateTimeButton extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _FormSkeleton extends StatelessWidget {
+  const _FormSkeleton();
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: const [
+        AppSkeleton(height: 24, width: 120),
+        SizedBox(height: 12),
+        AppSkeleton(height: 56),
+        SizedBox(height: 12),
+        AppSkeleton(height: 56),
+        SizedBox(height: 32),
+        AppSkeleton(height: 24, width: 100),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: AppSkeleton(height: 56)),
+            SizedBox(width: 10),
+            Expanded(child: AppSkeleton(height: 56)),
+          ],
+        ),
+        SizedBox(height: 32),
+        AppSkeleton(height: 24, width: 150),
+        SizedBox(height: 12),
+        AppSkeleton(height: 56),
+        SizedBox(height: 12),
+        AppSkeleton(height: 56),
+        SizedBox(height: 48),
+        AppSkeleton(height: 56),
+      ],
     );
   }
 }

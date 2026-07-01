@@ -11,6 +11,7 @@ import 'package:rentalin/features/booking/views/booking_detail_sheet.dart';
 import 'package:rentalin/features/booking/views/booking_form_page.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
 import 'package:rentalin/features/schedule/viewmodels/schedule_viewmodel.dart';
+import 'package:rentalin/core/widgets/app_skeleton.dart';
 
 class SchedulePage extends StatelessWidget {
   const SchedulePage({super.key});
@@ -121,7 +122,7 @@ class _ScheduleContent extends StatelessWidget {
           // List booking untuk hari terpilih
           Expanded(
             child: vm.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const AppListSkeleton()
                 : vm.selectedDayBookings.isEmpty
                     ? const AppEmptyState(
                         title: 'Tidak ada jadwal',

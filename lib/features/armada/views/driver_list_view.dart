@@ -4,6 +4,7 @@ import 'package:rentalin/core/theme/app_colors.dart';
 import 'package:rentalin/core/widgets/app_empty_state.dart';
 import 'package:rentalin/data/models/driver_model.dart';
 import 'package:rentalin/features/armada/viewmodels/driver_viewmodel.dart';
+import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'driver_form_page.dart';
 
 class DriverListView extends StatelessWidget {
@@ -14,7 +15,7 @@ class DriverListView extends StatelessWidget {
     final vm = context.watch<DriverViewModel>();
 
     if (vm.isLoading && vm.drivers.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton();
     }
 
     Widget content;
