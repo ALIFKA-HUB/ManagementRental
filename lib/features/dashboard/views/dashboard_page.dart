@@ -12,6 +12,7 @@ import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
 import 'package:rentalin/features/booking/views/booking_form_page.dart';
 import 'package:rentalin/features/booking/views/booking_detail_sheet.dart';
 import 'package:rentalin/features/dashboard/viewmodels/dashboard_viewmodel.dart';
+import 'package:rentalin/core/widgets/app_skeleton.dart';
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onGoToArmada;
@@ -88,7 +89,7 @@ class _DashboardContent extends StatelessWidget {
         ],
       ),
       body: vm.isLoading && vm.stats == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const _DashboardSkeleton()
           : RefreshIndicator(
               onRefresh: vm.load,
               child: ListView(
@@ -348,6 +349,44 @@ class _TimelineBookingCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DashboardSkeleton extends StatelessWidget {
+  const _DashboardSkeleton();
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        const AppSkeleton(height: 140, borderRadius: 16),
+        const SizedBox(height: AppSpacing.lg),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: List.generate(
+              3,
+              (_) => const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: AppSkeleton(width: 140, height: 70, borderRadius: 12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        const Row(
+          children: [
+            Expanded(child: AppSkeleton(height: 56, borderRadius: 30)),
+            SizedBox(width: 16),
+            Expanded(child: AppSkeleton(height: 56, borderRadius: 30)),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        const AppSkeleton(height: 30, width: 150),
+        const SizedBox(height: AppSpacing.md),
+        const AppListSkeleton(itemCount: 3, height: 100),
+      ],
     );
   }
 }

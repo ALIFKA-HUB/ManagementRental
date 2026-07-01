@@ -9,6 +9,7 @@ import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
 import 'package:rentalin/features/booking/views/booking_detail_sheet.dart';
 import 'package:rentalin/features/home_operator/viewmodels/operator_home_viewmodel.dart';
+import 'package:rentalin/core/widgets/app_skeleton.dart';
 
 class OperatorHomePage extends StatelessWidget {
   const OperatorHomePage({super.key});
@@ -87,7 +88,7 @@ class _OperatorHomeContent extends StatelessWidget {
         ],
       ),
       body: vm.isLoading && vm.todayBookings.isEmpty && vm.upcomingBookings.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppListSkeleton()
           : RefreshIndicator(
               onRefresh: () => vm.load(userId),
               child: SingleChildScrollView(

@@ -18,6 +18,8 @@ class AppEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final muted = Theme.of(context).colorScheme.surfaceContainerHighest;
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xxl),
@@ -28,19 +30,19 @@ class AppEmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(color: muted, shape: BoxShape.circle),
-              child: Icon(icon, size: 34, color: AppColors.textSecondaryLight),
+              child: Icon(icon, size: 34, color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               title,
-              style: textTheme.titleMedium,
+              style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
                 subtitle!,
-                style: textTheme.bodyMedium,
+                style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -7,6 +7,7 @@ import 'package:rentalin/core/widgets/app_empty_state.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
+import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'booking_detail_sheet.dart';
 
 class BookingListView extends StatefulWidget {
@@ -73,7 +74,7 @@ class _BookingListViewState extends State<BookingListView> {
 
         Expanded(
           child: vm.isLoading && vm.filteredBookings.isEmpty
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppListSkeleton()
               : vm.filteredBookings.isEmpty
                   ? const AppEmptyState(
                       title: 'Tidak ada booking aktif',
@@ -101,7 +102,7 @@ class _BookingListViewState extends State<BookingListView> {
 
   Widget _buildHistoryTab(BookingViewModel vm, bool isAdmin) {
     if (vm.isLoadingHistory && vm.historyBookings.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppListSkeleton();
     }
     if (vm.historyBookings.isEmpty) {
       return const AppEmptyState(
