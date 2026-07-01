@@ -66,10 +66,11 @@ class DriverViewModel extends ChangeNotifier {
         createdAt: now,
         updatedAt: now,
       );
-      await _driverRepo.add(driver);
+      final driverId = await _driverRepo.add(driver);
 
-      // Update users doc with driverId reference
-      // ponytail: skip for now, optional denormalization
+      // TASK-05: link the new driverId onto the user doc so Firestore security
+      // rules can scope this operator's booking reads to their own trips.
+      await _authRepo.linkDriverToUser(userModel.userId, driverId);
 
       await loadDrivers();
       return true;

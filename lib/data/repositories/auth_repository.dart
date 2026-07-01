@@ -78,4 +78,13 @@ class AuthRepository {
       await secondaryApp.delete();
     }
   }
+
+  /// TASK-05: denormalize the driverId onto the user doc so Firestore security
+  /// rules can scope an operator's booking reads to their own assigned trips.
+  Future<void> linkDriverToUser(String uid, String driverId) async {
+    await _db.collection('users').doc(uid).update({
+      'driverId': driverId,
+      'updatedAt': Timestamp.fromDate(DateTime.now()),
+    });
+  }
 }

@@ -45,6 +45,27 @@ class BookingRepository {
         .toList();
   }
 
+  /// TASK-05: month query scoped to a single driver. Operators may only read
+  /// their own assigned bookings, so their schedule must filter by driverId
+  /// (satisfying the scoped Firestore read rule). Needs the composite index
+  /// (driverId ASC, startDateTime ASC).
+  Future<List<BookingModel>> getBookingsForMonthByDriver(
+      String driverId, int year, int month) async {
+    final start = DateTime(year, month, 1);
+    final end = DateTime(year, month + 1, 1);
+    final lowerBound = start.subtract(const Duration(days: 366));
+    final snap = await _col
+        .where('driverId', isEqualTo: driverId)
+        .where('startDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(lowerBound))
+        .where('startDateTime', isLessThan: Timestamp.fromDate(end))
+        .get();
+
+    return snap.docs
+        .map(BookingModel.fromFirestore)
+        .where((b) => !b.endDateTime.isBefore(start))
+        .toList();
+  }
+
   Future<List<BookingModel>> getBookingsForDate(DateTime date) async {
     final start = DateTime(date.year, date.month, date.day);
     final end = start.add(const Duration(days: 1));
