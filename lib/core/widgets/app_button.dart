@@ -22,27 +22,30 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPrimary = style == AppButtonStyle.primary;
+    final childWidget = isLoading
+        ? const SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : Text(label);
+
+    Widget button;
+    if (style == AppButtonStyle.primary) {
+      button = ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        child: childWidget,
+      );
+    } else {
+      button = OutlinedButton(
+        onPressed: isLoading ? null : onPressed,
+        child: childWidget,
+      );
+    }
 
     return SizedBox(
       width: fullWidth ? double.infinity : null,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isPrimary ? AppColors.primary : AppColors.secondary,
-          foregroundColor: isPrimary ? AppColors.secondary : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 0,
-        ),
-        child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(label, style: AppTypography.buttonLabel),
-      ),
+      child: button,
     );
   }
 }
