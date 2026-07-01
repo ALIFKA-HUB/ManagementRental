@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rentalin/core/utils/app_time.dart';
@@ -24,51 +25,73 @@ class ScheduleViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
+  StreamSubscription<List<BookingModel>>? _monthSub;
+
+  @override
+  void dispose() {
+    _monthSub?.cancel();
+    super.dispose();
+  }
+
   Future<void> loadMonth(DateTime month) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      final List<BookingModel> bookings;
+      final Stream<List<BookingModel>> stream;
       if (isAdmin) {
-        bookings = await _repo.getBookingsForMonth(month.year, month.month);
+        stream = _repo.streamBookingsForMonth(month.year, month.month);
       } else {
-        // Resolve the operator's driverId once, then scope the query to it.
         _driverId ??= (await _driverRepo.findByUserId(userId ?? ''))?.driverId;
-        bookings = _driverId == null
-            ? <BookingModel>[]
-            : await _repo.getBookingsForMonthByDriver(_driverId!, month.year, month.month);
-      }
-      final map = <DateTime, List<BookingModel>>{};
-
-      for (final b in bookings) {
-        // Tambah ke setiap hari dalam rentang booking
-        final start = _normalize(b.startDateTime);
-        final end = _normalize(b.endDateTime);
-        DateTime cur = start;
-        while (!cur.isAfter(end)) {
-          map.putIfAbsent(cur, () => []).add(b);
-          cur = cur.add(const Duration(days: 1));
+        if (_driverId == null) {
+          stream = Stream.value(<BookingModel>[]);
+        } else {
+          stream = _repo.streamBookingsForMonthByDriver(_driverId!, month.year, month.month);
         }
       }
 
-      bookingsByDay = map;
-      _refreshSelectedDay();
-    } on FirebaseException catch (e, st) {
-      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
-      errorMessage = switch (e.code) {
-        'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
-        'permission-denied'   => 'Tidak punya akses ke data ini.',
-        _ => 'Gagal memuat jadwal.',
-      };
+      _monthSub?.cancel();
+      _monthSub = stream.listen(
+        (bookings) {
+          final map = <DateTime, List<BookingModel>>{};
+
+          for (final b in bookings) {
+            final start = _normalize(b.startDateTime);
+            final end = _normalize(b.endDateTime);
+            DateTime cur = start;
+            while (!cur.isAfter(end)) {
+              map.putIfAbsent(cur, () => []).add(b);
+              cur = cur.add(const Duration(days: 1));
+            }
+          }
+
+          bookingsByDay = map;
+          _refreshSelectedDay();
+          isLoading = false;
+          notifyListeners();
+        },
+        onError: (e) {
+          debugPrint('Firestore Stream Error: $e');
+          if (e is FirebaseException) {
+            errorMessage = switch (e.code) {
+              'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
+              'permission-denied'   => 'Tidak punya akses ke data ini.',
+              _ => 'Gagal memuat jadwal.',
+            };
+          } else {
+            errorMessage = 'Gagal memuat jadwal.';
+          }
+          isLoading = false;
+          notifyListeners();
+        },
+      );
     } catch (e, st) {
       debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat jadwal.';
+      isLoading = false;
+      notifyListeners();
     }
-
-    isLoading = false;
-    notifyListeners();
   }
 
   void selectDay(DateTime day, DateTime focused) {
