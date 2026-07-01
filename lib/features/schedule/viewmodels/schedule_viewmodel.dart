@@ -3,9 +3,19 @@ import 'package:flutter/foundation.dart';
 import 'package:rentalin/core/utils/app_time.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
+import 'package:rentalin/data/repositories/driver_repository.dart';
 
 class ScheduleViewModel extends ChangeNotifier {
   final BookingRepository _repo = BookingRepository();
+  final DriverRepository _driverRepo = DriverRepository();
+
+  /// TASK-05: admins see the whole schedule; operators see only their own
+  /// assigned trips (Firestore rules deny reading other bookings).
+  final bool isAdmin;
+  final String? userId;
+  String? _driverId;
+
+  ScheduleViewModel({this.isAdmin = true, this.userId});
 
   DateTime focusedDay = DateTime.now();
   DateTime selectedDay = DateTime.now();
@@ -20,7 +30,16 @@ class ScheduleViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final bookings = await _repo.getBookingsForMonth(month.year, month.month);
+      final List<BookingModel> bookings;
+      if (isAdmin) {
+        bookings = await _repo.getBookingsForMonth(month.year, month.month);
+      } else {
+        // Resolve the operator's driverId once, then scope the query to it.
+        _driverId ??= (await _driverRepo.findByUserId(userId ?? ''))?.driverId;
+        bookings = _driverId == null
+            ? <BookingModel>[]
+            : await _repo.getBookingsForMonthByDriver(_driverId!, month.year, month.month);
+      }
       final map = <DateTime, List<BookingModel>>{};
 
       for (final b in bookings) {

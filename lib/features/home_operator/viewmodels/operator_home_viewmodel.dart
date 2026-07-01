@@ -43,10 +43,9 @@ class OperatorHomeViewModel extends ChangeNotifier {
         upcomingBookings = active.where((b) => b.startDateTime.isAfter(today)).toList()
           ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
       } else {
-        // Operator bukan supir → lihat semua jadwal hari ini
-        final all = await _bookingRepo.getBookingsForDate(today);
-        todayBookings = all
-          ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+        // TASK-05: an operator not linked to a driver has no assigned trips and
+        // is not permitted to read the whole bookings collection (scoped rules).
+        todayBookings = [];
         upcomingBookings = [];
       }
     } on FirebaseException catch (e, st) {

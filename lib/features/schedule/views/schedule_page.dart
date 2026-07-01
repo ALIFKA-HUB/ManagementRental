@@ -17,8 +17,13 @@ class SchedulePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // TASK-05: pass role + userId so operators load only their own schedule.
+    final auth = context.read<AuthViewModel>();
+    final isAdmin = auth.currentUser?.isAdmin ?? false;
+    final userId = auth.currentUser?.userId;
     return ChangeNotifierProvider(
-      create: (_) => ScheduleViewModel()..loadMonth(DateTime.now()),
+      create: (_) => ScheduleViewModel(isAdmin: isAdmin, userId: userId)
+        ..loadMonth(DateTime.now()),
       child: const _ScheduleContent(),
     );
   }
