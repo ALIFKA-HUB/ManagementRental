@@ -59,18 +59,9 @@ class _CustomerAutocompleteState extends State<CustomerAutocomplete> {
         TextField(
           controller: widget.nameController,
           onChanged: _onNameChanged,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: 'Nama Penyewa',
             hintText: 'Ketik nama untuk pencarian',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
-            ),
           ),
         ),
         if (_showSuggestions)
