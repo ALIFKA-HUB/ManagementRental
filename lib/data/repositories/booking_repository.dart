@@ -30,8 +30,10 @@ class BookingRepository {
     final end = DateTime(year, month + 1, 1);
 
     // M-7: Both inequalities on same field → no composite index needed.
-    // 90-day lower bound prevents full history scan.
-    final lowerBound = start.subtract(const Duration(days: 90));
+    // TASK-04: use a 366-day lower bound so a long-running rental that STARTED
+    // in a previous period but still spans the viewed month is not missed
+    // (the old 90-day bound dropped such bookings). Still bounds the scan.
+    final lowerBound = start.subtract(const Duration(days: 366));
     final snap = await _col
         .where('startDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(lowerBound))
         .where('startDateTime', isLessThan: Timestamp.fromDate(end))
@@ -47,8 +49,10 @@ class BookingRepository {
     final start = DateTime(date.year, date.month, date.day);
     final end = start.add(const Duration(days: 1));
 
-    // M-7: same field inequalities; 90-day guard is sufficient for a single date.
-    final lowerBound = start.subtract(const Duration(days: 90));
+    // M-7: same field inequalities.
+    // TASK-04: 366-day lower bound so a long rental spanning this date but
+    // started earlier is still included.
+    final lowerBound = start.subtract(const Duration(days: 366));
     final snap = await _col
         .where('startDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(lowerBound))
         .where('startDateTime', isLessThan: Timestamp.fromDate(end))

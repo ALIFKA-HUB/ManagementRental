@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:rentalin/core/utils/app_time.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
 
@@ -66,5 +67,9 @@ class ScheduleViewModel extends ChangeNotifier {
     return bookingsByDay[_normalize(day)] ?? [];
   }
 
-  DateTime _normalize(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
+  // TASK-04: bucket by WIB calendar day so a booking near midnight lands on the
+  // correct day regardless of the device's local timezone. The same function is
+  // applied to booking instants and to the calendar's day cells, keeping the
+  // map keys and lookups consistent.
+  DateTime _normalize(DateTime dt) => AppTime.wibDay(dt);
 }
