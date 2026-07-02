@@ -115,7 +115,10 @@ class _ScheduleContent extends StatelessWidget {
               vm.selectDay(selected, focused);
             },
             onPageChanged: (focused) {
-              vm.loadMonth(focused);
+              vm.focusedDay = focused;
+              Future.delayed(const Duration(milliseconds: 300), () {
+                vm.loadMonth(focused);
+              });
             },
           ),
 
