@@ -94,10 +94,18 @@ class _BookingFormPageState extends State<BookingFormPage> {
     // L-4: capture vm before any await to avoid stale context access
     final vm = context.read<BookingViewModel>();
 
+    final initialDate = isStart 
+        ? (_startDateTime ?? DateTime.now()) 
+        : (_endDateTime ?? _startDateTime ?? DateTime.now());
+        
+    // Pastikan initialDate tidak sebelum firstDate
+    final firstDate = DateTime.now();
+    final validInitial = initialDate.isBefore(firstDate) ? firstDate : initialDate;
+
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: validInitial,
+      firstDate: firstDate,
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (date == null || !mounted) return;
