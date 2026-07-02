@@ -25,6 +25,17 @@ class BookingRepository {
     return list;
   }
 
+  Stream<List<BookingModel>> streamActiveBookings() {
+    return _col
+        .where('bookingStatus', whereIn: ['upcoming', 'active'])
+        .snapshots()
+        .map((snap) {
+      final list = snap.docs.map(BookingModel.fromFirestore).toList();
+      list.sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
+      return list;
+    });
+  }
+
   Future<List<BookingModel>> getBookingsForMonth(int year, int month) async {
     final start = DateTime(year, month, 1);
     final end = DateTime(year, month + 1, 1);
@@ -43,6 +54,23 @@ class BookingRepository {
         .map(BookingModel.fromFirestore)
         .where((b) => !b.endDateTime.isBefore(start)) // endDateTime >= start
         .toList();
+  }
+
+  Stream<List<BookingModel>> streamBookingsForMonth(int year, int month) {
+    final start = DateTime(year, month, 1);
+    final end = DateTime(year, month + 1, 1);
+    final lowerBound = start.subtract(const Duration(days: 366));
+
+    return _col
+        .where('startDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(lowerBound))
+        .where('startDateTime', isLessThan: Timestamp.fromDate(end))
+        .snapshots()
+        .map((snap) {
+      return snap.docs
+          .map(BookingModel.fromFirestore)
+          .where((b) => !b.endDateTime.isBefore(start))
+          .toList();
+    });
   }
 
   /// TASK-05: month query scoped to a single driver. Operators may only read
@@ -64,6 +92,25 @@ class BookingRepository {
         .map(BookingModel.fromFirestore)
         .where((b) => !b.endDateTime.isBefore(start))
         .toList();
+  }
+
+  Stream<List<BookingModel>> streamBookingsForMonthByDriver(
+      String driverId, int year, int month) {
+    final start = DateTime(year, month, 1);
+    final end = DateTime(year, month + 1, 1);
+    final lowerBound = start.subtract(const Duration(days: 366));
+
+    return _col
+        .where('driverId', isEqualTo: driverId)
+        .where('startDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(lowerBound))
+        .where('startDateTime', isLessThan: Timestamp.fromDate(end))
+        .snapshots()
+        .map((snap) {
+      return snap.docs
+          .map(BookingModel.fromFirestore)
+          .where((b) => !b.endDateTime.isBefore(start))
+          .toList();
+    });
   }
 
   Future<List<BookingModel>> getBookingsForDate(DateTime date) async {

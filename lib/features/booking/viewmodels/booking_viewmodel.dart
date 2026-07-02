@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rentalin/data/models/booking_log_model.dart';
@@ -38,28 +39,51 @@ class BookingViewModel extends ChangeNotifier {
     bufferMinutes = (await _settingsRepo.getRentalPolicy()).bufferMinutes;
   }
 
+  StreamSubscription<List<BookingModel>>? _activeSub;
+
+  @override
+  void dispose() {
+    _activeSub?.cancel();
+    super.dispose();
+  }
+
   Future<void> loadActiveBookings() async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
     try {
-      activeBookings = await _bookingRepo.getActiveBookings();
       await _loadBuffer();
-      _applyFilter();
-    } on FirebaseException catch (e, st) {
-      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
-      errorMessage = switch (e.code) {
-        'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
-        'permission-denied'   => 'Tidak punya akses ke data ini.',
-        'unavailable'         => 'Tidak ada koneksi. Coba lagi.',
-        _ => 'Gagal memuat booking.',
-      };
+      
+      _activeSub?.cancel();
+      _activeSub = _bookingRepo.streamActiveBookings().listen(
+        (bookings) {
+          activeBookings = bookings;
+          _applyFilter();
+          isLoading = false;
+          notifyListeners();
+        },
+        onError: (e) {
+          debugPrint('Firestore Stream Error: $e');
+          if (e is FirebaseException) {
+            errorMessage = switch (e.code) {
+              'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
+              'permission-denied'   => 'Tidak punya akses ke data ini.',
+              'unavailable'         => 'Tidak ada koneksi. Coba lagi.',
+              _ => 'Gagal memuat booking.',
+            };
+          } else {
+            errorMessage = 'Gagal memuat booking.';
+          }
+          isLoading = false;
+          notifyListeners();
+        },
+      );
     } catch (e, st) {
       debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat booking.';
+      isLoading = false;
+      notifyListeners();
     }
-    isLoading = false;
-    notifyListeners();
   }
 
   Future<void> loadHistoryBookings() async {
@@ -231,7 +255,8 @@ class BookingViewModel extends ChangeNotifier {
 
       await _bookingRepo.addWithLog(booking, log);
       await _customerRepo.upsertCustomer(customerName, customerPhone);
-      await loadActiveBookings();
+      isLoading = false;
+      notifyListeners();
       return true;
     } on BookingConflictException catch (e) {
       // M-1: transaction detected resource grabbed by another admin
@@ -271,7 +296,8 @@ class BookingViewModel extends ChangeNotifier {
         timestamp: DateTime.now(),
       );
       await _bookingRepo.cancelBooking(bookingId: bookingId, log: log);
-      await loadActiveBookings();
+      isLoading = false;
+      notifyListeners();
       return true;
     } catch (_) {
       errorMessage = 'Gagal membatalkan booking.';
@@ -311,7 +337,8 @@ class BookingViewModel extends ChangeNotifier {
         log: log,
         lateFee: lateFee,
       );
-      await loadActiveBookings();
+      isLoading = false;
+      notifyListeners();
       return true;
     } catch (_) {
       errorMessage = 'Gagal menyelesaikan booking.';
@@ -373,7 +400,8 @@ class BookingViewModel extends ChangeNotifier {
         extraPrice: extraPrice,
         log: log,
       );
-      await loadActiveBookings();
+      isLoading = false;
+      notifyListeners();
       return true;
     } catch (e, st) {
       debugPrint('extendBooking error: $e\n$st');
@@ -406,7 +434,8 @@ class BookingViewModel extends ChangeNotifier {
         newStatus: newStatus,
         log: log,
       );
-      await loadActiveBookings();
+      isLoading = false;
+      notifyListeners();
       return true;
     } catch (_) {
       errorMessage = 'Gagal mengubah status pembayaran.';
