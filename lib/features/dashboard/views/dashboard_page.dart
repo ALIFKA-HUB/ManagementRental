@@ -477,11 +477,16 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
   }
 
   void _startAutoScroll() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.offset + 1.0);
       }
     });
+  }
+
+  void _pauseAutoScroll() {
+    _timer?.cancel();
   }
 
   @override
@@ -495,16 +500,21 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 78,
-      child: ListView.builder(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: widget.children[index % widget.children.length],
-          );
-        },
+      child: Listener(
+        onPointerDown: (_) => _pauseAutoScroll(),
+        onPointerUp: (_) => _startAutoScroll(),
+        onPointerCancel: (_) => _startAutoScroll(),
+        child: ListView.builder(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: widget.children[index % widget.children.length],
+            );
+          },
+        ),
       ),
     );
   }
