@@ -196,6 +196,42 @@ class BookingViewModel extends ChangeNotifier {
     }).toList();
   }
 
+  /// TASK-12: the active booking that makes [vehicleId] unavailable in the
+  /// selected [start]..[end] window (respecting the turnaround buffer), or null
+  /// if the vehicle is free. Lets the form disable + annotate the option with
+  /// the conflicting dates instead of hiding it. Excludes [excludeBookingId]
+  /// so an edited booking doesn't clash with itself.
+  BookingModel? vehicleConflict(String vehicleId, DateTime? start, DateTime? end,
+      {String? excludeBookingId}) {
+    if (start == null || end == null) return null;
+    final buffer = Duration(minutes: bufferMinutes);
+    for (final b in activeBookings) {
+      if (b.bookingId == excludeBookingId) continue;
+      if (b.vehicleId != vehicleId) continue;
+      if (b.startDateTime.subtract(buffer).isBefore(end) &&
+          b.endDateTime.add(buffer).isAfter(start)) {
+        return b;
+      }
+    }
+    return null;
+  }
+
+  /// TASK-12: same as [vehicleConflict] but for a driver.
+  BookingModel? driverConflict(String driverId, DateTime? start, DateTime? end,
+      {String? excludeBookingId}) {
+    if (start == null || end == null) return null;
+    final buffer = Duration(minutes: bufferMinutes);
+    for (final b in activeBookings) {
+      if (b.bookingId == excludeBookingId) continue;
+      if (b.driverId != driverId) continue;
+      if (b.startDateTime.subtract(buffer).isBefore(end) &&
+          b.endDateTime.add(buffer).isAfter(start)) {
+        return b;
+      }
+    }
+    return null;
+  }
+
   /// TASK-11: all bookings for one customer (used by the per-customer history
   /// view). Read-only, does not mutate list state.
   Future<List<BookingModel>> getCustomerHistory(String phone) {

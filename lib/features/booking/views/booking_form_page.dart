@@ -148,6 +148,38 @@ class _BookingFormPageState extends State<BookingFormPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  /// TASK-12: build a dropdown option that is disabled + grayed with a
+  /// `Terpakai <dates>` suffix when [conflict] is non-null, otherwise a plain
+  /// selectable option.
+  DropdownMenuItem<T> _buildOptionItem<T>({
+    required T value,
+    required String label,
+    required BookingModel? conflict,
+  }) {
+    if (conflict == null) {
+      return DropdownMenuItem<T>(value: value, child: Text(label, overflow: TextOverflow.ellipsis));
+    }
+    return DropdownMenuItem<T>(
+      value: value,
+      enabled: false,
+      child: Text(
+        '$label — Terpakai ${_rangeLabel(conflict.startDateTime, conflict.endDateTime)}',
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: Colors.grey),
+      ),
+    );
+  }
+
+  /// Compact date range like "5–7 Jul" (or "5 Jul–2 Agu" across months).
+  String _rangeLabel(DateTime start, DateTime end) {
+    final sameMonth = start.year == end.year && start.month == end.month;
+    if (sameMonth) {
+      return '${start.day}–${DateFormat('d MMM', 'id').format(end)}';
+    }
+    final f = DateFormat('d MMM', 'id');
+    return '${f.format(start)}–${f.format(end)}';
+  }
+
   Future<void> _onSave() async {
     if (!_validate()) return;
 
@@ -255,26 +287,39 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   Text('Kendaraan & Supir', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
 
+                  // TASK-12: show ALL candidates; conflicting ones are disabled
+                  // (grayed) and annotated with the dates they're taken, so the
+                  // admin sees why an option is unavailable without submitting.
                   DropdownButtonFormField<VehicleModel>(
                     value: _selectedVehicle,
+                    isExpanded: true,
                     hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Kendaraan'),
                     decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.getAvailableVehicles(_startDateTime, _endDateTime, excludeBookingId: widget.existing?.bookingId).map((v) => DropdownMenuItem(
-                      value: v,
-                      child: Text('${v.name} (${v.plateNumber})'),
-                    )).toList(),
+                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.readyVehicles.map((v) {
+                      final conflict = vm.vehicleConflict(v.vehicleId, _startDateTime, _endDateTime, excludeBookingId: widget.existing?.bookingId);
+                      return _buildOptionItem<VehicleModel>(
+                        value: v,
+                        label: '${v.name} (${v.plateNumber})',
+                        conflict: conflict,
+                      );
+                    }).toList(),
                     onChanged: (v) => setState(() => _selectedVehicle = v),
                   ),
                   const SizedBox(height: 12),
 
                   DropdownButtonFormField<DriverModel>(
                     value: _selectedDriver,
+                    isExpanded: true,
                     hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Supir'),
                     decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.getAvailableDrivers(_startDateTime, _endDateTime, excludeBookingId: widget.existing?.bookingId).map((d) => DropdownMenuItem(
-                      value: d,
-                      child: Text('${d.name} (${d.codeId})'),
-                    )).toList(),
+                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.standbyDrivers.map((d) {
+                      final conflict = vm.driverConflict(d.driverId, _startDateTime, _endDateTime, excludeBookingId: widget.existing?.bookingId);
+                      return _buildOptionItem<DriverModel>(
+                        value: d,
+                        label: '${d.name} (${d.codeId})',
+                        conflict: conflict,
+                      );
+                    }).toList(),
                     onChanged: (d) => setState(() => _selectedDriver = d),
                   ),
 
