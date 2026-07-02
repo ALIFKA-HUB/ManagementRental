@@ -4,6 +4,8 @@ import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
 import 'package:rentalin/data/repositories/driver_repository.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
+import 'package:rentalin/data/models/vehicle_model.dart';
+import 'package:rentalin/data/models/driver_model.dart';
 
 class DashboardStats {
   final int totalVehicles;
