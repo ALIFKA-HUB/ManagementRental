@@ -23,6 +23,14 @@
         { "fieldPath": "driverId", "order": "ASCENDING" },
         { "fieldPath": "startDateTime", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "bookings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "customerPhone", "order": "ASCENDING" },
+        { "fieldPath": "startDateTime", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

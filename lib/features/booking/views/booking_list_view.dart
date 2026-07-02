@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +20,10 @@ class BookingListView extends StatefulWidget {
 }
 
 class _BookingListViewState extends State<BookingListView> {
+  // TASK-11: debounced search on the active tab.
+  final TextEditingController _searchCtrl = TextEditingController();
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
@@ -26,6 +31,20 @@ class _BookingListViewState extends State<BookingListView> {
       if (widget.isHistory) {
         context.read<BookingViewModel>().loadHistoryBookings();
       }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) context.read<BookingViewModel>().searchBookings(value);
     });
   }
 
@@ -45,6 +64,32 @@ class _BookingListViewState extends State<BookingListView> {
   Widget _buildActiveTab(BookingViewModel vm, bool isAdmin) {
     return Column(
       children: [
+        // TASK-11: search by customer / plate / driver.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: TextField(
+            controller: _searchCtrl,
+            onChanged: _onSearchChanged,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'Cari nama, plat, atau supir...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchCtrl.text.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchCtrl.clear();
+                        _debounce?.cancel();
+                        vm.searchBookings('');
+                        setState(() {});
+                      },
+                    ),
+              isDense: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ),
         // Filter chips
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),

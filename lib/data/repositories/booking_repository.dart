@@ -278,6 +278,48 @@ class BookingRepository {
     await batch.commit();
   }
 
+  /// TASK-11: edit an existing booking's editable fields (customer, vehicle,
+  /// driver, routes, schedule, price, payment) + write an activity log, in one
+  /// batch. Availability is date-overlap based (TASK-01) so the caller re-runs
+  /// [checkConflict] with `excludeBookingId` set to this booking before calling
+  /// here; status flags stay best-effort "current" indicators.
+  Future<void> updateBooking({
+    required BookingModel updated,
+    required BookingLogModel log,
+  }) async {
+    final batch = _db.batch();
+    final bookingRef = _col.doc(updated.bookingId);
+    batch.update(bookingRef, {
+      'customerName': updated.customerName,
+      'customerPhone': updated.customerPhone,
+      'vehicleId': updated.vehicleId,
+      'vehicleName': updated.vehicleName,
+      'vehiclePlate': updated.vehiclePlate,
+      'driverId': updated.driverId,
+      'driverName': updated.driverName,
+      'routes': updated.routes,
+      'startDateTime': Timestamp.fromDate(updated.startDateTime),
+      'endDateTime': Timestamp.fromDate(updated.endDateTime),
+      'rentalPrice': updated.rentalPrice,
+      'paymentStatus': updated.paymentStatus.value,
+      'notes': updated.notes,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    batch.set(bookingRef.collection('logs').doc(), log.toFirestore());
+    await batch.commit();
+  }
+
+  /// TASK-11: all bookings for a given customer phone, most recent first.
+  /// Needs the composite index (customerPhone ASC, startDateTime DESC).
+  Future<List<BookingModel>> getBookingsByCustomerPhone(String phone) async {
+    if (phone.isEmpty) return [];
+    final snap = await _col
+        .where('customerPhone', isEqualTo: phone)
+        .orderBy('startDateTime', descending: true)
+        .get();
+    return snap.docs.map(BookingModel.fromFirestore).toList();
+  }
+
   Future<void> extendBooking({
     required String bookingId,
     required DateTime newEnd,

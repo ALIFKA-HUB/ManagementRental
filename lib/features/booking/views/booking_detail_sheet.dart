@@ -6,6 +6,8 @@ import 'package:rentalin/core/widgets/app_chip.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
+import 'booking_form_page.dart';
+import 'customer_history_page.dart';
 
 class BookingDetailSheet extends StatelessWidget {
   final BookingModel booking;
@@ -54,7 +56,24 @@ class BookingDetailSheet extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(booking.customerPhone, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(booking.customerPhone,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                    ),
+                    // TASK-11: jump to this customer's full booking history.
+                    TextButton.icon(
+                      icon: const Icon(Icons.history, size: 16),
+                      label: const Text('Riwayat'),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: () => _openCustomerHistory(context),
+                    ),
+                  ],
+                ),
                 const Divider(height: 24),
 
                 _DetailRow(label: 'Kendaraan', value: '${booking.vehicleName} (${booking.vehiclePlate})'),
@@ -83,6 +102,16 @@ class BookingDetailSheet extends StatelessWidget {
                   const Divider(height: 28),
                   Text('Aksi', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey)),
                   const SizedBox(height: 12),
+
+                  // TASK-11: full edit (schedule/vehicle/driver/price/customer)
+                  _ActionButton(
+                    icon: Icons.edit_outlined,
+                    label: 'Edit Booking',
+                    color: AppColors.primary,
+                    textColor: Colors.black,
+                    onTap: () => _openEdit(context, vm),
+                  ),
+                  const SizedBox(height: 10),
 
                   // Update Payment
                   _ActionButton(
@@ -129,6 +158,36 @@ class BookingDetailSheet extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────────────
+
+  /// TASK-11: open this customer's full booking history.
+  void _openCustomerHistory(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerHistoryPage(
+          customerName: booking.customerName,
+          customerPhone: booking.customerPhone,
+        ),
+      ),
+    );
+  }
+
+  /// TASK-11: close the sheet, then open the booking form in edit mode carrying
+  /// the same BookingViewModel so availability/lists stay consistent.
+  void _openEdit(BuildContext context, BookingViewModel vm) {
+    Navigator.pop(context); // close the detail sheet first
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(
+          value: vm,
+          child: BookingFormPage(existing: booking),
+        ),
+      ),
+    ).then((_) => vm.loadActiveBookings());
   }
 
   // ── Dialogs ──────────────────────────────────────────────────────────────
