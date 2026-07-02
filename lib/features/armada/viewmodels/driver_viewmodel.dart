@@ -26,7 +26,9 @@ class DriverViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Batch: create Auth + users doc + drivers doc
+  /// TASK-08: Create Auth + users doc + drivers doc atomically (single batch,
+  /// with compensating Auth cleanup on failure) so no orphan account/doc can
+  /// be left behind.
   Future<bool> addDriver({
     required String name,
     required String codeId,
@@ -47,30 +49,14 @@ class DriverViewModel extends ChangeNotifier {
         return false;
       }
 
-      // Create Auth account + users doc
-      final now = DateTime.now();
-      final userModel = await _authRepo.createUserAccount(
-        email: email,
-        password: password,
-        displayName: name,
-      );
-
-      // Create drivers doc
-      final driver = DriverModel(
-        driverId: '',
+      // Auth account + users doc + drivers doc, all-or-nothing.
+      await _authRepo.createDriverAccount(
         name: name,
         codeId: codeId,
         phone: phone,
-        userId: userModel.userId,
-        status: DriverStatus.standby,
-        createdAt: now,
-        updatedAt: now,
+        email: email,
+        password: password,
       );
-      final driverId = await _driverRepo.add(driver);
-
-      // TASK-05: link the new driverId onto the user doc so Firestore security
-      // rules can scope this operator's booking reads to their own trips.
-      await _authRepo.linkDriverToUser(userModel.userId, driverId);
 
       await loadDrivers();
       return true;
@@ -132,7 +118,30 @@ class DriverViewModel extends ChangeNotifier {
         notifyListeners();
         return false;
       }
-      await _driverRepo.delete(driverId);
+
+      // TASK-08: resolve the linked userId (prefer the in-memory list, fall
+      // back to a fetch) so we can tear down both `drivers` and `users` docs
+      // atomically. Removing the users doc locks the account out of the app.
+      final linkedUserId = drivers
+          .firstWhere(
+            (d) => d.driverId == driverId,
+            orElse: () => DriverModel(
+              driverId: driverId,
+              name: '',
+              codeId: '',
+              phone: '',
+              userId: '',
+              status: DriverStatus.standby,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          )
+          .userId;
+      final userId = linkedUserId.isNotEmpty
+          ? linkedUserId
+          : (await _driverRepo.getById(driverId))?.userId ?? '';
+
+      await _authRepo.deleteDriverAccount(driverId: driverId, userId: userId);
       await loadDrivers();
       return true;
     } catch (_) {
