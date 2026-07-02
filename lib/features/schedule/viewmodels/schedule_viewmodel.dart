@@ -34,6 +34,7 @@ class ScheduleViewModel extends ChangeNotifier {
   }
 
   Future<void> loadMonth(DateTime month) async {
+    focusedDay = month;
     isLoading = true;
     errorMessage = null;
     notifyListeners();
