@@ -39,6 +39,43 @@ class BookingRepository {
     return list;
   }
 
+  /// Otomatis ubah status kendaraan & supir menjadi inUse/onTrip
+  /// untuk semua booking 'upcoming' yang waktu mulainya sudah lewat.
+  Future<void> syncActiveStatuses() async {
+    final now = DateTime.now();
+    final snap = await _col
+        .where('bookingStatus', isEqualTo: 'upcoming')
+        .get();
+
+    final batch = _db.batch();
+    bool hasWork = false;
+
+    for (final doc in snap.docs) {
+      final b = BookingModel.fromFirestore(doc);
+      if (now.isAfter(b.startDateTime) && now.isBefore(b.endDateTime)) {
+        batch.update(doc.reference, {
+          'bookingStatus': 'active',
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        if (b.vehicleId.isNotEmpty) {
+          batch.update(_db.collection('vehicles').doc(b.vehicleId), {
+            'status': 'in_use',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+        if (b.driverId.isNotEmpty) {
+          batch.update(_db.collection('drivers').doc(b.driverId), {
+            'status': 'on_trip',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+        hasWork = true;
+      }
+    }
+
+    if (hasWork) await batch.commit();
+  }
+
   Stream<List<BookingModel>> streamActiveBookings() {
     return _col
         .where('bookingStatus', whereIn: ['upcoming', 'active'])
@@ -271,11 +308,11 @@ class BookingRepository {
           !now.isBefore(booking.startDateTime) && now.isBefore(booking.endDateTime);
       if (isCurrent) {
         txn.update(vehicleRef, {
-          'status': VehicleStatus.inUse.value,
+          'status': 'in_use',
           'updatedAt': FieldValue.serverTimestamp(),
         });
         txn.update(driverRef, {
-          'status': DriverStatus.onTrip.value,
+          'status': 'on_trip',
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
@@ -294,20 +331,20 @@ class BookingRepository {
     final booking = BookingModel.fromFirestore(snap);
 
     batch.update(bookingRef, {
-      'bookingStatus': BookingStatus.cancelled.value,
+      'bookingStatus': 'cancelled',
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
     // H-5: Guard empty IDs
     if (booking.vehicleId.isNotEmpty) {
       final vSnap = await _db.collection('vehicles').doc(booking.vehicleId).get();
-      if ((vSnap.data()?['status']) != VehicleStatus.maintenance.value) {
-        batch.update(vSnap.reference, {'status': VehicleStatus.ready.value, 'updatedAt': FieldValue.serverTimestamp()});
+      if ((vSnap.data()?['status']) != 'maintenance') {
+        batch.update(vSnap.reference, {'status': 'ready', 'updatedAt': FieldValue.serverTimestamp()});
       }
     }
     if (booking.driverId.isNotEmpty) {
       batch.update(_db.collection('drivers').doc(booking.driverId), {
-        'status': DriverStatus.standby.value,
+        'status': 'standby',
         'updatedAt': FieldValue.serverTimestamp(),
       });
     }
@@ -325,20 +362,20 @@ class BookingRepository {
     final booking = BookingModel.fromFirestore(snap);
 
     batch.update(bookingRef, {
-      'bookingStatus': BookingStatus.completed.value,
+      'bookingStatus': 'completed',
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
     // H-5: Guard empty IDs
     if (booking.vehicleId.isNotEmpty) {
       final vSnap = await _db.collection('vehicles').doc(booking.vehicleId).get();
-      if ((vSnap.data()?['status']) != VehicleStatus.maintenance.value) {
-        batch.update(vSnap.reference, {'status': VehicleStatus.ready.value, 'updatedAt': FieldValue.serverTimestamp()});
+      if ((vSnap.data()?['status']) != 'maintenance') {
+        batch.update(vSnap.reference, {'status': 'ready', 'updatedAt': FieldValue.serverTimestamp()});
       }
     }
     if (booking.driverId.isNotEmpty) {
       batch.update(_db.collection('drivers').doc(booking.driverId), {
-        'status': DriverStatus.standby.value,
+        'status': 'standby',
         'updatedAt': FieldValue.serverTimestamp(),
       });
     }

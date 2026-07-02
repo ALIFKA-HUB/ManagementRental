@@ -70,10 +70,13 @@ class VehicleModel {
         (e) => e.value == d['category'],
         orElse: () => VehicleCategory.other,
       ),
-      status: VehicleStatus.values.firstWhere(
-        (e) => e.value == d['status'],
-        orElse: () => VehicleStatus.ready,
-      ),
+      status: (() {
+        switch (d['status'] as String? ?? 'ready') {
+          case 'in_use': return VehicleStatus.inUse;
+          case 'maintenance': return VehicleStatus.maintenance;
+          default: return VehicleStatus.ready;
+        }
+      })(),
       photoUrl: d['photoUrl'],
       conditionNotes: d['conditionNotes'],
       createdAt: (d['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -85,7 +88,7 @@ class VehicleModel {
         'name': name,
         'plateNumber': plateNumber,
         'category': category.value,
-        'status': status.value,
+        'status': status == VehicleStatus.inUse ? 'in_use' : status == VehicleStatus.maintenance ? 'maintenance' : 'ready',
         'photoUrl': photoUrl,
         'conditionNotes': conditionNotes,
         'createdAt': Timestamp.fromDate(createdAt),
