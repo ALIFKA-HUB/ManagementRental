@@ -18,29 +18,19 @@ class DriverListView extends StatelessWidget {
       return const AppListSkeleton();
     }
 
-    final itemCount = vm.drivers.length + 1;
+    if (vm.drivers.isEmpty) {
+      return const AppEmptyState(
+        title: 'Belum ada supir',
+        icon: Icons.person_off_outlined,
+      );
+    }
+
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: itemCount,
+      itemCount: vm.drivers.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, i) {
-        if (i == 0) {
-          return _AddCard(
-            title: 'Tambah Supir Baru',
-            icon: Icons.person_add_alt_1_outlined,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider.value(
-                  value: vm,
-                  child: const DriverFormPage(),
-                ),
-              ),
-            ).then((_) => vm.loadDrivers()),
-          );
-        }
-
-        final d = vm.drivers[i - 1];
+        final d = vm.drivers[i];
         return _DriverCard(driver: d);
       },
     );

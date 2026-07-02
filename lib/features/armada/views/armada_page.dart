@@ -26,7 +26,38 @@ class ArmadaPage extends StatelessWidget {
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Armada'),
-
+            actions: [
+              if (isAdmin)
+                Builder(
+                  builder: (ctx) => IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      final tabIndex = DefaultTabController.of(ctx).index;
+                      if (tabIndex == 0) {
+                        Navigator.push(
+                          ctx,
+                          MaterialPageRoute(
+                            builder: (_) => ChangeNotifierProvider.value(
+                              value: ctx.read<VehicleViewModel>(),
+                              child: const VehicleFormPage(),
+                            ),
+                          ),
+                        ).then((_) => ctx.read<VehicleViewModel>().loadVehicles());
+                      } else {
+                        Navigator.push(
+                          ctx,
+                          MaterialPageRoute(
+                            builder: (_) => ChangeNotifierProvider.value(
+                              value: ctx.read<DriverViewModel>(),
+                              child: const DriverFormPage(),
+                            ),
+                          ),
+                        ).then((_) => ctx.read<DriverViewModel>().loadDrivers());
+                      }
+                    },
+                  ),
+                ),
+            ],
             bottom: TabBar(
               tabs: [
                 const Tab(text: 'Kendaraan'),
