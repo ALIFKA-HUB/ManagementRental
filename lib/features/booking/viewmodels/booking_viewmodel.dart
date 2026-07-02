@@ -40,6 +40,10 @@ class BookingViewModel extends ChangeNotifier {
   bool isLoadingMoreHistory = false;
   static const int _historyPageSize = 20;
 
+  /// TASK-11: free-text search (customer name / plate / driver) over the
+  /// already-loaded active bookings — no extra Firestore reads.
+  String searchQuery = '';
+
   /// Best-effort refresh of the configurable turnaround buffer.
   Future<void> _loadBuffer() async {
     bufferMinutes = (await _settingsRepo.getRentalPolicy()).bufferMinutes;
@@ -159,11 +163,16 @@ class BookingViewModel extends ChangeNotifier {
     } catch (_) {}
   }
 
-  List<VehicleModel> getAvailableVehicles(DateTime? start, DateTime? end) {
+  /// TASK-11: [excludeBookingId] lets the edit form ignore the booking being
+  /// edited when computing availability, so its own vehicle/driver stay
+  /// selectable.
+  List<VehicleModel> getAvailableVehicles(DateTime? start, DateTime? end,
+      {String? excludeBookingId}) {
     if (start == null || end == null) return readyVehicles;
     final buffer = Duration(minutes: bufferMinutes);
     return readyVehicles.where((v) {
       final conflict = activeBookings.any((b) =>
+        b.bookingId != excludeBookingId &&
         b.vehicleId == v.vehicleId &&
         b.startDateTime.subtract(buffer).isBefore(end) &&
         b.endDateTime.add(buffer).isAfter(start)
@@ -172,11 +181,13 @@ class BookingViewModel extends ChangeNotifier {
     }).toList();
   }
 
-  List<DriverModel> getAvailableDrivers(DateTime? start, DateTime? end) {
+  List<DriverModel> getAvailableDrivers(DateTime? start, DateTime? end,
+      {String? excludeBookingId}) {
     if (start == null || end == null) return standbyDrivers;
     final buffer = Duration(minutes: bufferMinutes);
     return standbyDrivers.where((d) {
       final conflict = activeBookings.any((b) =>
+        b.bookingId != excludeBookingId &&
         b.driverId == d.driverId &&
         b.startDateTime.subtract(buffer).isBefore(end) &&
         b.endDateTime.add(buffer).isAfter(start)
@@ -185,8 +196,22 @@ class BookingViewModel extends ChangeNotifier {
     }).toList();
   }
 
+  /// TASK-11: all bookings for one customer (used by the per-customer history
+  /// view). Read-only, does not mutate list state.
+  Future<List<BookingModel>> getCustomerHistory(String phone) {
+    return _bookingRepo.getBookingsByCustomerPhone(phone);
+  }
+
   void filterBookings(BookingFilter filter) {
     currentFilter = filter;
+    _applyFilter();
+    notifyListeners();
+  }
+
+  /// TASK-11: update the text query and re-apply filters (called debounced by
+  /// the UI).
+  void searchBookings(String query) {
+    searchQuery = query;
     _applyFilter();
     notifyListeners();
   }
@@ -196,23 +221,39 @@ class BookingViewModel extends ChangeNotifier {
     final today = DateTime(now.year, now.month, now.day);
     final endOfWeek = today.add(const Duration(days: 7));
 
+    // 1) time-window chip.
+    List<BookingModel> result;
     switch (currentFilter) {
       case BookingFilter.all:
-        filteredBookings = List.from(activeBookings);
+        result = List.from(activeBookings);
         break;
       case BookingFilter.today:
-        filteredBookings = activeBookings.where((b) {
+        result = activeBookings.where((b) {
           final start = DateTime(b.startDateTime.year, b.startDateTime.month, b.startDateTime.day);
           return start == today;
         }).toList();
         break;
       case BookingFilter.thisWeek:
-        filteredBookings = activeBookings.where((b) =>
+        result = activeBookings.where((b) =>
           b.startDateTime.isAfter(today.subtract(const Duration(seconds: 1))) &&
           b.startDateTime.isBefore(endOfWeek)
         ).toList();
         break;
     }
+
+    // 2) TASK-11: free-text search across customer, plate and driver.
+    final q = searchQuery.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      result = result.where((b) =>
+        b.customerName.toLowerCase().contains(q) ||
+        b.vehiclePlate.toLowerCase().contains(q) ||
+        b.vehicleName.toLowerCase().contains(q) ||
+        b.driverName.toLowerCase().contains(q) ||
+        b.customerPhone.contains(q)
+      ).toList();
+    }
+
+    filteredBookings = result;
   }
 
   Future<bool> createBooking({
@@ -314,6 +355,110 @@ class BookingViewModel extends ChangeNotifier {
     } catch (e, st) {
       debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal membuat booking.';
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// TASK-11: edit an existing booking with full conflict re-validation
+  /// (excluding its own id) — no need to cancel + recreate. Mirrors
+  /// [createBooking] but calls the repo's updateBooking.
+  Future<bool> editBooking({
+    required String bookingId,
+    required String customerName,
+    required String customerPhone,
+    required VehicleModel vehicle,
+    required DriverModel driver,
+    required List<String> routes,
+    required DateTime startDateTime,
+    required DateTime endDateTime,
+    required double rentalPrice,
+    required PaymentStatus paymentStatus,
+    required String uid,
+    required String displayName,
+    String? notes,
+  }) async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      if (!endDateTime.isAfter(startDateTime)) {
+        errorMessage = 'Waktu selesai harus setelah waktu mulai.';
+        isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      await _loadBuffer();
+      final conflict = await _bookingRepo.checkConflict(
+        vehicleId: vehicle.vehicleId,
+        driverId: driver.driverId,
+        start: startDateTime,
+        end: endDateTime,
+        excludeBookingId: bookingId,
+        bufferMinutes: bufferMinutes,
+      );
+      if (conflict) {
+        errorMessage = bufferMinutes > 0
+            ? 'Jadwal bentrok atau terlalu dekat (jeda min. $bufferMinutes menit) dengan booking lain.'
+            : 'Jadwal bentrok dengan booking lain. Periksa kendaraan atau supir.';
+        isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      // Preserve immutable fields; the copyWith on the existing entry keeps
+      // bookingStatus/createdBy/createdAt untouched.
+      final existing = activeBookings.firstWhere(
+        (b) => b.bookingId == bookingId,
+        orElse: () => throw StateError('Booking not found in active list'),
+      );
+      final now = DateTime.now();
+      final updated = BookingModel(
+        bookingId: bookingId,
+        customerName: customerName,
+        customerPhone: customerPhone,
+        vehicleId: vehicle.vehicleId,
+        vehicleName: vehicle.name,
+        vehiclePlate: vehicle.plateNumber,
+        driverId: driver.driverId,
+        driverName: driver.name,
+        routes: routes,
+        startDateTime: startDateTime,
+        endDateTime: endDateTime,
+        rentalPrice: rentalPrice,
+        paymentStatus: paymentStatus,
+        bookingStatus: existing.bookingStatus,
+        notes: notes,
+        createdBy: existing.createdBy,
+        createdAt: existing.createdAt,
+        updatedAt: now,
+      );
+
+      final log = BookingLogModel(
+        logId: '',
+        action: 'Booking diedit',
+        performedBy: uid,
+        performedByName: displayName,
+        timestamp: now,
+      );
+
+      await _bookingRepo.updateBooking(updated: updated, log: log);
+      // TASK-09: the active-bookings stream reflects the update automatically;
+      // no manual reload needed (which would re-subscribe the stream).
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } on BookingConflictException catch (e) {
+      errorMessage = e.message;
+      isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e, st) {
+      debugPrint('editBooking error: $e\n$st');
+      errorMessage = 'Gagal menyimpan perubahan booking.';
       isLoading = false;
       notifyListeners();
       return false;

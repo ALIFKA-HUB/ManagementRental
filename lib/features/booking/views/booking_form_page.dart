@@ -14,7 +14,10 @@ import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
 
 class BookingFormPage extends StatefulWidget {
-  const BookingFormPage({super.key});
+  /// TASK-11: when non-null the form runs in EDIT mode — fields are prefilled
+  /// and saving calls editBooking instead of createBooking.
+  final BookingModel? existing;
+  const BookingFormPage({super.key, this.existing});
 
   @override
   State<BookingFormPage> createState() => _BookingFormPageState();
@@ -35,12 +38,46 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
   bool _formDataLoaded = false;
 
+  bool get _isEdit => widget.existing != null;
+
   @override
   void initState() {
     super.initState();
+
+    // TASK-11: prefill scalar fields synchronously in edit mode; the
+    // vehicle/driver objects are resolved once loadFormData populates the lists.
+    final e = widget.existing;
+    if (e != null) {
+      _nameCtrl.text = e.customerName;
+      _phoneCtrl.text = e.customerPhone;
+      _priceCtrl.text = e.rentalPrice.toStringAsFixed(0);
+      _notesCtrl.text = e.notes ?? '';
+      _startDateTime = e.startDateTime;
+      _endDateTime = e.endDateTime;
+      _paymentStatus = e.paymentStatus;
+      _routes = List<String>.from(e.routes);
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final vm = context.read<BookingViewModel>();
-      vm.loadFormData().then((_) => setState(() => _formDataLoaded = true));
+      vm.loadFormData().then((_) {
+        if (!mounted) return;
+        setState(() {
+          _formDataLoaded = true;
+          // Bind the dropdown selections to the actual instances in the loaded
+          // lists (DropdownButton uses identity/equality for its value).
+          if (e != null) {
+            _selectedVehicle = vm.readyVehicles
+                .where((v) => v.vehicleId == e.vehicleId)
+                .cast<VehicleModel?>()
+                .firstWhere((v) => true, orElse: () => null);
+            _selectedDriver = vm.standbyDrivers
+                .where((d) => d.driverId == e.driverId)
+                .cast<DriverModel?>()
+                .firstWhere((d) => true, orElse: () => null);
+          }
+        });
+      });
     });
   }
 
@@ -78,11 +115,13 @@ class _BookingFormPageState extends State<BookingFormPage> {
       }
 
       // Hapus pilihan jika kendaraan/supir tidak tersedia di jadwal baru
-      final availVehicles = vm.getAvailableVehicles(_startDateTime, _endDateTime);
+      final availVehicles = vm.getAvailableVehicles(_startDateTime, _endDateTime,
+          excludeBookingId: widget.existing?.bookingId);
       if (_selectedVehicle != null && !availVehicles.any((v) => v.vehicleId == _selectedVehicle!.vehicleId)) {
         _selectedVehicle = null;
       }
-      final availDrivers = vm.getAvailableDrivers(_startDateTime, _endDateTime);
+      final availDrivers = vm.getAvailableDrivers(_startDateTime, _endDateTime,
+          excludeBookingId: widget.existing?.bookingId);
       if (_selectedDriver != null && !availDrivers.any((d) => d.driverId == _selectedDriver!.driverId)) {
         _selectedDriver = null;
       }
@@ -115,21 +154,43 @@ class _BookingFormPageState extends State<BookingFormPage> {
     final vm = context.read<BookingViewModel>();
     final auth = context.read<AuthViewModel>();
 
-    final ok = await vm.createBooking(
-      customerName: _nameCtrl.text.trim(),
-      customerPhone: _phoneCtrl.text.trim(),
-      vehicle: _selectedVehicle!,
-      driver: _selectedDriver!,
-      routes: _routes,
-      startDateTime: _startDateTime!,
-      endDateTime: _endDateTime!,
-      // M-3: strip all non-digits before parsing
-      rentalPrice: double.tryParse(_priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
-      paymentStatus: _paymentStatus,
-      createdBy: auth.currentUser!.userId,
-      createdByName: auth.currentUser!.displayName,
-      notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-    );
+    // M-3: strip all non-digits before parsing
+    final price = double.tryParse(_priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    final notes = _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim();
+
+    final bool ok;
+    if (_isEdit) {
+      ok = await vm.editBooking(
+        bookingId: widget.existing!.bookingId,
+        customerName: _nameCtrl.text.trim(),
+        customerPhone: _phoneCtrl.text.trim(),
+        vehicle: _selectedVehicle!,
+        driver: _selectedDriver!,
+        routes: _routes,
+        startDateTime: _startDateTime!,
+        endDateTime: _endDateTime!,
+        rentalPrice: price,
+        paymentStatus: _paymentStatus,
+        uid: auth.currentUser!.userId,
+        displayName: auth.currentUser!.displayName,
+        notes: notes,
+      );
+    } else {
+      ok = await vm.createBooking(
+        customerName: _nameCtrl.text.trim(),
+        customerPhone: _phoneCtrl.text.trim(),
+        vehicle: _selectedVehicle!,
+        driver: _selectedDriver!,
+        routes: _routes,
+        startDateTime: _startDateTime!,
+        endDateTime: _endDateTime!,
+        rentalPrice: price,
+        paymentStatus: _paymentStatus,
+        createdBy: auth.currentUser!.userId,
+        createdByName: auth.currentUser!.displayName,
+        notes: notes,
+      );
+    }
 
     if (!mounted) return;
     if (ok) {
@@ -147,7 +208,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
     final fmt = DateFormat('dd MMM yyyy, HH:mm', 'id');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Buat Booking')),
+      appBar: AppBar(title: Text(_isEdit ? 'Edit Booking' : 'Buat Booking')),
       body: !_formDataLoaded
           ? const _FormSkeleton()
           : SingleChildScrollView(
@@ -198,7 +259,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                     value: _selectedVehicle,
                     hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Kendaraan'),
                     decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.getAvailableVehicles(_startDateTime, _endDateTime).map((v) => DropdownMenuItem(
+                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.getAvailableVehicles(_startDateTime, _endDateTime, excludeBookingId: widget.existing?.bookingId).map((v) => DropdownMenuItem(
                       value: v,
                       child: Text('${v.name} (${v.plateNumber})'),
                     )).toList(),
@@ -210,7 +271,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                     value: _selectedDriver,
                     hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Supir'),
                     decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.getAvailableDrivers(_startDateTime, _endDateTime).map((d) => DropdownMenuItem(
+                    items: (_startDateTime == null || _endDateTime == null) ? null : vm.getAvailableDrivers(_startDateTime, _endDateTime, excludeBookingId: widget.existing?.bookingId).map((d) => DropdownMenuItem(
                       value: d,
                       child: Text('${d.name} (${d.codeId})'),
                     )).toList(),
@@ -220,7 +281,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   const Divider(height: 32),
 
                   // Rute
-                  MultiStopInput(initialRoutes: const [], onChanged: (r) => setState(() => _routes = r)),
+                  MultiStopInput(initialRoutes: _routes, onChanged: (r) => setState(() => _routes = r)),
 
                   const Divider(height: 32),
 
@@ -247,7 +308,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   const SizedBox(height: 28),
 
                   AppButton(
-                    label: 'Buat Booking',
+                    label: _isEdit ? 'Simpan Perubahan' : 'Buat Booking',
                     onPressed: vm.isLoading ? null : _onSave,
                     isLoading: vm.isLoading,
                   ),
