@@ -81,9 +81,9 @@ class DashboardViewModel extends ChangeNotifier {
 
       stats = DashboardStats(
         totalVehicles: (vehicles as List).length,
-        readyVehicles: (vehicles).where((v) => v.status.value == 'ready').length,
+        readyVehicles: (vehicles).where((v) => v.status == VehicleStatus.ready).length,
         totalDrivers: (drivers as List).length,
-        standbyDrivers: (drivers).where((d) => d.status.value == 'standby').length,
+        standbyDrivers: (drivers).where((d) => d.status == DriverStatus.standby).length,
         // TASK-02: count only bookings that are actually running right now,
         // not future (upcoming) ones.
         activeBookings: active.where((b) => b.effectiveStatus == BookingStatus.active).length,
