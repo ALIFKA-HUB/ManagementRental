@@ -157,7 +157,7 @@ class _VehicleCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (isAdmin)
+                if (isAdmin && vehicle.status != VehicleStatus.inUse)
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
                     onSelected: (val) {
