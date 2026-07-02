@@ -75,15 +75,17 @@ class _ScheduleContent extends StatelessWidget {
               titleCentered: true,
             ),
             calendarStyle: CalendarStyle(
+              cellMargin: const EdgeInsets.all(8),
               todayDecoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.4),
                 shape: BoxShape.circle,
               ),
+              todayTextStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               selectedDecoration: const BoxDecoration(
                 color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
-              selectedTextStyle: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               markerDecoration: const BoxDecoration(
                 color: AppColors.secondary,
                 shape: BoxShape.circle,
@@ -190,7 +192,16 @@ class _ScheduleBookingCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(booking.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(booking.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 8),
+                        AppChip(label: booking.effectiveStatusLabel),
+                      ],
+                    ),
                     const SizedBox(height: 2),
                     Text('${booking.vehicleName} • ${booking.driverName}', style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(height: 2),
@@ -199,7 +210,6 @@ class _ScheduleBookingCard extends StatelessWidget {
                   ],
                 ),
               ),
-              AppChip(label: booking.effectiveStatusLabel),
             ],
           ),
         ),

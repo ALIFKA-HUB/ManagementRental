@@ -103,45 +103,55 @@ class BookingDetailSheet extends StatelessWidget {
                   Text('Aksi', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.grey)),
                   const SizedBox(height: 12),
 
-                  // TASK-11: full edit (schedule/vehicle/driver/price/customer)
-                  _ActionButton(
-                    icon: Icons.edit_outlined,
-                    label: 'Edit Booking',
-                    color: AppColors.primary,
-                    textColor: Colors.black,
-                    onTap: () => _openEdit(context, vm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ActionButton(
+                          icon: Icons.edit_outlined,
+                          label: 'Edit',
+                          color: AppColors.primary,
+                          textColor: Colors.white,
+                          onTap: () => _openEdit(context, vm),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ActionButton(
+                          icon: Icons.payments_outlined,
+                          label: 'Bayar',
+                          color: AppColors.primary,
+                          textColor: Colors.white,
+                          onTap: () => _showPaymentDialog(context, vm, auth),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
 
-                  // Update Payment
-                  _ActionButton(
-                    icon: Icons.payments_outlined,
-                    label: 'Update Status Bayar',
-                    color: AppColors.primary,
-                    textColor: Colors.black,
-                    onTap: () => _showPaymentDialog(context, vm, auth),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ActionButton(
+                          icon: Icons.schedule_outlined,
+                          label: 'Perpanjang',
+                          color: Colors.orange,
+                          textColor: Colors.white,
+                          onTap: () => _showExtendDialog(context, vm, auth),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ActionButton(
+                          icon: Icons.check_circle_outline,
+                          label: 'Selesai',
+                          color: AppColors.success,
+                          textColor: Colors.white,
+                          onTap: () => _confirmComplete(context, vm, auth),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-
-                  // Extend
-                  _ActionButton(
-                    icon: Icons.schedule_outlined,
-                    label: 'Perpanjang Booking',
-                    color: Colors.orange,
-                    textColor: Colors.white,
-                    onTap: () => _showExtendDialog(context, vm, auth),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Complete
-                  _ActionButton(
-                    icon: Icons.check_circle_outline,
-                    label: 'Selesaikan Booking',
-                    color: AppColors.success,
-                    textColor: Colors.white,
-                    onTap: () => _confirmComplete(context, vm, auth),
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
 
                   // Cancel
                   _ActionButton(
@@ -412,7 +422,10 @@ class _ActionButton extends StatelessWidget {
       height: 46,
       child: ElevatedButton.icon(
         icon: Icon(icon, size: 18),
-        label: Text(label),
+        label: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ),
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: textColor,
