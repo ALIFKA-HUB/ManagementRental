@@ -8,7 +8,7 @@ extension VehicleStatusExt on VehicleStatus {
   String get label {
     switch (this) {
       case VehicleStatus.ready: return 'Ready';
-      case VehicleStatus.inUse: return 'Sedang Digunakan';
+      case VehicleStatus.inUse: return 'Di Jalan';
       case VehicleStatus.maintenance: return 'Bengkel';
     }
   }

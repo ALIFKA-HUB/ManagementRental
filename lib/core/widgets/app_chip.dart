@@ -30,16 +30,16 @@ class AppChip extends StatelessWidget {
       case 'sedang digunakan':
       case 'on_trip':
       case 'sedang jalan':
+      case 'di jalan':
       case 'active':
       case 'aktif':
       case 'dp':
       case 'upcoming':
       case 'akan datang':
         return AppColors.warning;
-      // Bengkel / dibatalkan / belum bayar = merah/orange
+      // Bengkel / dibatalkan / belum bayar = merah
       case 'maintenance':
       case 'bengkel':
-        return AppColors.warning; // orange
       case 'cancelled':
       case 'dibatalkan':
       case 'unpaid':

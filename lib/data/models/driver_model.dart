@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum DriverStatus { standby, onTrip }
 
 extension DriverStatusExt on DriverStatus {
-  String get label => this == DriverStatus.standby ? 'Standby' : 'Sedang Jalan';
+  String get label => this == DriverStatus.standby ? 'Standby' : 'Di Jalan';
   String get value => this == DriverStatus.standby ? 'standby' : 'on_trip';
 }
 
