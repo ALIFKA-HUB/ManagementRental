@@ -467,6 +467,8 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
   late ScrollController _scrollController;
   Timer? _timer;
 
+  final Key _centerKey = const ValueKey('marquee_center');
+
   @override
   void initState() {
     super.initState();
@@ -496,6 +498,15 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
     super.dispose();
   }
 
+  Widget _buildItem(int index) {
+    final len = widget.children.length;
+    final normalizedIndex = (index % len + len) % len;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: widget.children[normalizedIndex],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -504,16 +515,24 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
         onPointerDown: (_) => _pauseAutoScroll(),
         onPointerUp: (_) => _startAutoScroll(),
         onPointerCancel: (_) => _startAutoScroll(),
-        child: ListView.builder(
+        child: CustomScrollView(
           controller: _scrollController,
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
-          itemBuilder: (context, index) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: widget.children[index % widget.children.length],
-            );
-          },
+          center: _centerKey,
+          slivers: [
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _buildItem(-index - 1),
+              ),
+            ),
+            SliverList(
+              key: _centerKey,
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => _buildItem(index),
+              ),
+            ),
+          ],
         ),
       ),
     );
