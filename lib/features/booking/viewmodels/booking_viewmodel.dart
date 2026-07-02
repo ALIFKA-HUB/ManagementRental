@@ -410,7 +410,7 @@ class BookingViewModel extends ChangeNotifier {
   /// (excluding its own id) — no need to cancel + recreate. Mirrors
   /// [createBooking] but calls the repo's updateBooking.
   Future<bool> editBooking({
-    required String bookingId,
+    required BookingModel existingBooking,
     required String customerName,
     required String customerPhone,
     required VehicleModel vehicle,
@@ -426,43 +426,29 @@ class BookingViewModel extends ChangeNotifier {
   }) async {
     isLoading = true;
     errorMessage = null;
-    notifyListeners();
-
+    _safeNotify();
     try {
-      if (!endDateTime.isAfter(startDateTime)) {
-        errorMessage = 'Waktu selesai harus setelah waktu mulai.';
-        isLoading = false;
-        notifyListeners();
-        return false;
-      }
-
       await _loadBuffer();
       final conflict = await _bookingRepo.checkConflict(
         vehicleId: vehicle.vehicleId,
         driverId: driver.driverId,
         start: startDateTime,
         end: endDateTime,
-        excludeBookingId: bookingId,
+        excludeBookingId: existingBooking.bookingId,
         bufferMinutes: bufferMinutes,
       );
       if (conflict) {
-        errorMessage = bufferMinutes > 0
+        errorMessage = await _settingsRepo.getRentalPolicy().then((p) => p.bufferMinutes > 0)
             ? 'Jadwal bentrok atau terlalu dekat (jeda min. $bufferMinutes menit) dengan booking lain.'
             : 'Jadwal bentrok dengan booking lain. Periksa kendaraan atau supir.';
         isLoading = false;
-        notifyListeners();
+        _safeNotify();
         return false;
       }
 
-      // Preserve immutable fields; the copyWith on the existing entry keeps
-      // bookingStatus/createdBy/createdAt untouched.
-      final existing = activeBookings.firstWhere(
-        (b) => b.bookingId == bookingId,
-        orElse: () => throw StateError('Booking not found in active list'),
-      );
       final now = DateTime.now();
       final updated = BookingModel(
-        bookingId: bookingId,
+        bookingId: existingBooking.bookingId,
         customerName: customerName,
         customerPhone: customerPhone,
         vehicleId: vehicle.vehicleId,
@@ -475,10 +461,10 @@ class BookingViewModel extends ChangeNotifier {
         endDateTime: endDateTime,
         rentalPrice: rentalPrice,
         paymentStatus: paymentStatus,
-        bookingStatus: existing.bookingStatus,
+        bookingStatus: existingBooking.bookingStatus,
         notes: notes,
-        createdBy: existing.createdBy,
-        createdAt: existing.createdAt,
+        createdBy: existingBooking.createdBy,
+        createdAt: existingBooking.createdAt,
         updatedAt: now,
       );
 
@@ -494,18 +480,18 @@ class BookingViewModel extends ChangeNotifier {
       // TASK-09: the active-bookings stream reflects the update automatically;
       // no manual reload needed (which would re-subscribe the stream).
       isLoading = false;
-      notifyListeners();
+      _safeNotify();
       return true;
     } on BookingConflictException catch (e) {
       errorMessage = e.message;
       isLoading = false;
-      notifyListeners();
+      _safeNotify();
       return false;
     } catch (e, st) {
       debugPrint('editBooking error: $e\n$st');
       errorMessage = 'Gagal menyimpan perubahan booking.';
       isLoading = false;
-      notifyListeners();
+      _safeNotify();
       return false;
     }
   }

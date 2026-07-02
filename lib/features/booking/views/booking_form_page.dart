@@ -201,7 +201,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
     final bool ok;
     if (_isEdit) {
       ok = await vm.editBooking(
-        bookingId: widget.existing!.bookingId,
+        existingBooking: widget.existing!,
         customerName: _nameCtrl.text.trim(),
         customerPhone: _phoneCtrl.text.trim(),
         vehicle: _selectedVehicle!,
