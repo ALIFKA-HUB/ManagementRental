@@ -136,13 +136,17 @@ class _DashboardContent extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xl),
 
                   // COMMAND ROW (Quick Actions)
-                  Row(
-                    children: [
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                       Expanded(
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.add_circle_outline),
-                          label: const Text('Buat Booking'),
-                          onPressed: () {
+                        child: _ActionCard(
+                          title: 'Buat Booking',
+                          subtitle: 'Transaksi Baru',
+                          icon: Icons.add_circle_outline,
+                          color: AppColors.primary,
+                          onTap: () {
                             final bookingVm = BookingViewModel()..loadActiveBookings();
                             Navigator.push(
                               context,
@@ -158,16 +162,19 @@ class _DashboardContent extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.directions_car_outlined),
-                          label: const Text('Kelola Armada'),
-                          onPressed: onGoToArmada ?? () => Navigator.push(
+                        child: _ActionCard(
+                          title: 'Kelola Armada',
+                          subtitle: 'Cek Kendaraan',
+                          icon: Icons.directions_car_outlined,
+                          color: AppColors.secondary,
+                          onTap: onGoToArmada ?? () => Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const ArmadaPage()),
                           ),
                         ),
                       ),
                     ],
+                  ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
 
@@ -248,16 +255,30 @@ class _EmptyToday extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: AppSpacing.xl),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
-          const Icon(Icons.event_available_outlined, color: AppColors.textSecondaryLight, size: 28),
-          const SizedBox(height: AppSpacing.sm),
-          Text('Tidak ada jadwal hari ini', style: Theme.of(context).textTheme.bodyMedium),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.event_available_rounded, color: AppColors.primary, size: 48),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Hari Ini Kosong', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(
+            'Belum ada jadwal trip yang harus dijalankan hari ini.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondaryLight),
+          ),
         ],
       ),
     );
@@ -387,6 +408,55 @@ class _DashboardSkeleton extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         const AppListSkeleton(itemCount: 3, height: 100),
       ],
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.card),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: color)),
+            const SizedBox(height: 4),
+            Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondaryLight)),
+          ],
+        ),
+      ),
     );
   }
 }
