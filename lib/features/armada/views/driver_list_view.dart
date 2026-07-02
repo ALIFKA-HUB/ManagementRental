@@ -18,26 +18,32 @@ class DriverListView extends StatelessWidget {
       return const AppListSkeleton();
     }
 
-    Widget content;
-    if (vm.drivers.isEmpty) {
-      content = const AppEmptyState(
-        title: 'Belum ada supir',
-        subtitle: 'Tambah supir baru dengan tombol +',
-        icon: Icons.person_outlined,
-      );
-    } else {
-      content = ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: vm.drivers.length,
-        separatorBuilder: (_, _a) => const SizedBox(height: 8),
-        itemBuilder: (context, i) {
-          final d = vm.drivers[i];
-          return _DriverCard(driver: d);
-        },
-      );
-    }
+    final itemCount = vm.drivers.length + 1;
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: itemCount,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, i) {
+        if (i == 0) {
+          return _AddCard(
+            title: 'Tambah Supir Baru',
+            icon: Icons.person_add_alt_1_outlined,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChangeNotifierProvider.value(
+                  value: vm,
+                  child: const DriverFormPage(),
+                ),
+              ),
+            ).then((_) => vm.loadDrivers()),
+          );
+        }
 
-    return content;
+        final d = vm.drivers[i - 1];
+        return _DriverCard(driver: d);
+      },
+    );
   }
 }
 
@@ -150,6 +156,58 @@ class _DriverCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _AddCard({required this.title, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
+      ),
+      elevation: 0,
+      color: AppColors.primary.withValues(alpha: 0.05),
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 56, // avatar size 28 radius
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: AppColors.primary, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

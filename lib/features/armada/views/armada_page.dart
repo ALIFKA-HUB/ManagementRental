@@ -26,34 +26,7 @@ class ArmadaPage extends StatelessWidget {
         child: Scaffold(
           appBar: AppBar(
             title: const Text('Armada'),
-            actions: [
-              Builder(
-                builder: (ctx) {
-                  if (!isAdmin) return const SizedBox.shrink();
-                  return PopupMenuButton<String>(
-                    icon: const Icon(Icons.add),
-                    tooltip: 'Tambah Data',
-                    onSelected: (val) {
-                      if (val == 'v') {
-                        final vm = ctx.read<VehicleViewModel>();
-                        Navigator.push(ctx, MaterialPageRoute(
-                          builder: (_) => ChangeNotifierProvider.value(value: vm, child: const VehicleFormPage()),
-                        )).then((_) => vm.loadVehicles());
-                      } else if (val == 'd') {
-                        final vm = ctx.read<DriverViewModel>();
-                        Navigator.push(ctx, MaterialPageRoute(
-                          builder: (_) => ChangeNotifierProvider.value(value: vm, child: const DriverFormPage()),
-                        )).then((_) => vm.loadDrivers());
-                      }
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'v', child: Text('Tambah Kendaraan')),
-                      PopupMenuItem(value: 'd', child: Text('Tambah Supir')),
-                    ],
-                  );
-                },
-              ),
-            ],
+
             bottom: TabBar(
               tabs: [
                 const Tab(text: 'Kendaraan'),
