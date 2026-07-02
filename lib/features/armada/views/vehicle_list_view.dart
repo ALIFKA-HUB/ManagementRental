@@ -28,29 +28,12 @@ class VehicleListView extends StatelessWidget {
       );
     }
 
-    final itemCount = vm.vehicles.length + (isAdmin ? 1 : 0);
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: itemCount,
+      itemCount: vm.vehicles.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, i) {
-        if (isAdmin && i == 0) {
-          return _AddCard(
-            title: 'Tambah Kendaraan Baru',
-            icon: Icons.add_circle_outline,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider.value(
-                  value: vm,
-                  child: const VehicleFormPage(),
-                ),
-              ),
-            ).then((_) => vm.loadVehicles()),
-          );
-        }
-
-        final v = vm.vehicles[isAdmin ? i - 1 : i];
+        final v = vm.vehicles[i];
         return _VehicleCard(vehicle: v, isAdmin: isAdmin);
       },
     );
