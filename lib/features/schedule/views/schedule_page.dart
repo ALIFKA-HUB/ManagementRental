@@ -86,11 +86,30 @@ class _ScheduleContent extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              markerDecoration: const BoxDecoration(
-                color: AppColors.secondary,
-                shape: BoxShape.circle,
-              ),
-              markersMaxCount: 3,
+            ),
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, date, events) {
+                if (events.isEmpty) return const SizedBox();
+                final isSelected = isSameDay(date, vm.selectedDay);
+                return Positioned(
+                  bottom: 4,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(
+                      events.length > 3 ? 3 : events.length,
+                      (index) => Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected ? Colors.white : AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             onDaySelected: (selected, focused) {
               vm.selectDay(selected, focused);
