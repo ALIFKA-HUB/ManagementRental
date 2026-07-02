@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:rentalin/core/config/booking_policy.dart';
+
 
 enum PaymentStatus { unpaid, dp, paid }
 
@@ -81,16 +81,7 @@ class BookingModel {
     return DateTime.now().isAfter(endDateTime);
   }
 
-  /// Hours elapsed past [endDateTime], rounded up to the next started hour
-  /// (0 when not overdue).
-  int get overdueHours {
-    if (!isOverdue) return 0;
-    final mins = DateTime.now().difference(endDateTime).inMinutes;
-    return (mins / 60).ceil();
-  }
 
-  /// TASK-02: automatic late fee = surcharge per started overdue hour.
-  double get lateFee => overdueHours * BookingPolicy.lateFeePerHour;
 
   /// Status label that reflects real time: "Terlambat" when overdue, otherwise
   /// the effective (upcoming->active) status label.
