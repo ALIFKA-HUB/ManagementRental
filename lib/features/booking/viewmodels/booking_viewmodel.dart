@@ -49,30 +49,37 @@ class BookingViewModel extends ChangeNotifier {
     bufferMinutes = (await _settingsRepo.getRentalPolicy()).bufferMinutes;
   }
 
+  bool _isDisposed = false;
   StreamSubscription<List<BookingModel>>? _activeSub;
 
   @override
   void dispose() {
+    _isDisposed = true;
     _activeSub?.cancel();
     super.dispose();
+  }
+
+  void _safeNotify() {
+    if (!_isDisposed) notifyListeners();
   }
 
   Future<void> loadActiveBookings() async {
     isLoading = true;
     errorMessage = null;
-    notifyListeners();
+    _safeNotify();
     try {
       await _loadBuffer();
-      // Sinkronisasi status kendaraan/supir untuk booking yang sudah waktunya mulai
       await _bookingRepo.syncActiveStatuses();
       
+      if (_isDisposed) return;
+
       _activeSub?.cancel();
       _activeSub = _bookingRepo.streamActiveBookings().listen(
         (bookings) {
           activeBookings = bookings;
           _applyFilter();
           isLoading = false;
-          notifyListeners();
+          _safeNotify();
         },
         onError: (e) {
           debugPrint('Firestore Stream Error: $e');
@@ -87,14 +94,14 @@ class BookingViewModel extends ChangeNotifier {
             errorMessage = 'Gagal memuat booking.';
           }
           isLoading = false;
-          notifyListeners();
+          _safeNotify();
         },
       );
     } catch (e, st) {
       debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat booking.';
       isLoading = false;
-      notifyListeners();
+      _safeNotify();
     }
   }
 
