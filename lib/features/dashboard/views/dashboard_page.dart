@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -115,22 +116,15 @@ class _DashboardContent extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // SECONDARY METRICS (Compact Row)
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _CompactStat(label: 'Bulan Ini', value: currency.format(vm.stats!.monthRevenue), icon: Icons.calendar_month),
-                          const SizedBox(width: AppSpacing.sm),
-                          _CompactStat(label: 'Booking Aktif', value: '${vm.stats!.activeBookings}', icon: Icons.receipt_long, color: AppColors.primary),
-                          const SizedBox(width: AppSpacing.sm),
-                          _CompactStat(label: 'Belum Lunas', value: '${vm.stats!.pendingPayment}', icon: Icons.payments, color: AppColors.warning),
-                          const SizedBox(width: AppSpacing.sm),
-                          _CompactStat(label: 'Mobil Siap', value: '${vm.stats!.readyVehicles}/${vm.stats!.totalVehicles}', icon: Icons.directions_car, color: AppColors.success),
-                          const SizedBox(width: AppSpacing.sm),
-                          _CompactStat(label: 'Supir Standby', value: '${vm.stats!.standbyDrivers}/${vm.stats!.totalDrivers}', icon: Icons.person, color: AppColors.secondary),
-                        ],
-                      ),
+                    // SECONDARY METRICS (Marquee)
+                    ContinuousMarquee(
+                      children: [
+                        _CompactStat(label: 'Bulan Ini', value: currency.format(vm.stats!.monthRevenue), icon: Icons.calendar_month),
+                        _CompactStat(label: 'Booking Aktif', value: '${vm.stats!.activeBookings}', icon: Icons.receipt_long, color: AppColors.primary),
+                        _CompactStat(label: 'Belum Lunas', value: '${vm.stats!.pendingPayment}', icon: Icons.payments, color: AppColors.warning),
+                        _CompactStat(label: 'Mobil Siap', value: '${vm.stats!.readyVehicles}/${vm.stats!.totalVehicles}', icon: Icons.directions_car, color: AppColors.success),
+                        _CompactStat(label: 'Supir Standby', value: '${vm.stats!.standbyDrivers}/${vm.stats!.totalDrivers}', icon: Icons.person, color: AppColors.secondary),
+                      ],
                     ),
                   ],
                   const SizedBox(height: AppSpacing.xl),
@@ -456,6 +450,61 @@ class _ActionCard extends StatelessWidget {
             Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondaryLight)),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ContinuousMarquee extends StatefulWidget {
+  final List<Widget> children;
+  const ContinuousMarquee({super.key, required this.children});
+
+  @override
+  State<ContinuousMarquee> createState() => _ContinuousMarqueeState();
+}
+
+class _ContinuousMarqueeState extends State<ContinuousMarquee> {
+  late ScrollController _scrollController;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startAutoScroll();
+    });
+  }
+
+  void _startAutoScroll() {
+    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.offset + 1.0);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 78,
+      child: ListView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: widget.children[index % widget.children.length],
+          );
+        },
       ),
     );
   }
