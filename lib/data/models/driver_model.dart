@@ -47,7 +47,7 @@ class DriverModel {
         'codeId': codeId,
         'phone': phone,
         'userId': userId,
-        'status': status.value,
+        'status': status == DriverStatus.onTrip ? 'on_trip' : 'standby',
         'createdAt': Timestamp.fromDate(createdAt),
         'updatedAt': Timestamp.fromDate(updatedAt),
       };

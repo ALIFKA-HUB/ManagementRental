@@ -63,6 +63,8 @@ class BookingViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       await _loadBuffer();
+      // Sinkronisasi status kendaraan/supir untuk booking yang sudah waktunya mulai
+      await _bookingRepo.syncActiveStatuses();
       
       _activeSub?.cancel();
       _activeSub = _bookingRepo.streamActiveBookings().listen(
