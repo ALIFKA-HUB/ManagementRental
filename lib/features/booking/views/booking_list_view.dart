@@ -19,14 +19,34 @@ class BookingListView extends StatefulWidget {
 }
 
 class _BookingListViewState extends State<BookingListView> {
+  // TASK-10: drives infinite scroll on the history tab.
+  final ScrollController _historyScrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+    if (widget.isHistory) {
+      _historyScrollController.addListener(_onHistoryScroll);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.isHistory) {
         context.read<BookingViewModel>().loadHistoryBookings();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _historyScrollController.dispose();
+    super.dispose();
+  }
+
+  void _onHistoryScroll() {
+    // Prefetch the next page ~300px before the bottom for a seamless scroll.
+    if (_historyScrollController.position.pixels >=
+        _historyScrollController.position.maxScrollExtent - 300) {
+      context.read<BookingViewModel>().loadMoreHistory();
+    }
   }
 
   @override
@@ -111,13 +131,30 @@ class _BookingListViewState extends State<BookingListView> {
         icon: Icons.history,
       );
     }
+    // TASK-10: extra trailing slot for the "load more" spinner / end indicator.
+    final itemCount = vm.historyBookings.length + (vm.historyHasMore ? 1 : 0);
     return RefreshIndicator(
       onRefresh: vm.loadHistoryBookings,
       child: ListView.separated(
+        controller: _historyScrollController,
         padding: const EdgeInsets.all(16),
-        itemCount: vm.historyBookings.length,
+        itemCount: itemCount,
         separatorBuilder: (_, _a) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
+          if (i >= vm.historyBookings.length) {
+            // Footer while the next page loads (or waiting for the scroll to
+            // trigger it). hasMore == false removes this slot entirely.
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.4),
+                ),
+              ),
+            );
+          }
           final b = vm.historyBookings[i];
           return _BookingCard(booking: b, isAdmin: isAdmin);
         },

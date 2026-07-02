@@ -34,6 +34,12 @@ class BookingViewModel extends ChangeNotifier {
   bool isLoadingHistory = false;
   String? errorMessage;
 
+  /// TASK-10: cursor pagination state for the history list.
+  DocumentSnapshot? _historyCursor;
+  bool historyHasMore = true;
+  bool isLoadingMoreHistory = false;
+  static const int _historyPageSize = 20;
+
   /// Best-effort refresh of the configurable turnaround buffer.
   Future<void> _loadBuffer() async {
     bufferMinutes = (await _settingsRepo.getRentalPolicy()).bufferMinutes;
@@ -86,11 +92,18 @@ class BookingViewModel extends ChangeNotifier {
     }
   }
 
+  /// TASK-10: (re)load the first page of history. Resets the cursor so this
+  /// doubles as pull-to-refresh.
   Future<void> loadHistoryBookings() async {
     isLoadingHistory = true;
+    _historyCursor = null;
+    historyHasMore = true;
     notifyListeners();
     try {
-      historyBookings = await _bookingRepo.getCompletedBookings();
+      final page = await _bookingRepo.getCompletedBookings(limit: _historyPageSize);
+      historyBookings = page.items;
+      _historyCursor = page.lastDoc;
+      historyHasMore = page.hasMore;
     } on FirebaseException catch (e, st) {
       debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
       errorMessage = switch (e.code) {
@@ -103,6 +116,30 @@ class BookingViewModel extends ChangeNotifier {
       errorMessage = 'Gagal memuat riwayat booking.';
     }
     isLoadingHistory = false;
+    notifyListeners();
+  }
+
+  /// TASK-10: fetch the next page and APPEND it. No-op while a page is already
+  /// in flight, or once the end has been reached.
+  Future<void> loadMoreHistory() async {
+    if (isLoadingMoreHistory || !historyHasMore || _historyCursor == null) return;
+    isLoadingMoreHistory = true;
+    notifyListeners();
+    try {
+      final page = await _bookingRepo.getCompletedBookings(
+        startAfter: _historyCursor,
+        limit: _historyPageSize,
+      );
+      historyBookings = [...historyBookings, ...page.items];
+      _historyCursor = page.lastDoc ?? _historyCursor;
+      historyHasMore = page.hasMore;
+    } on FirebaseException catch (e, st) {
+      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      // Keep what we already have; allow a later retry.
+    } catch (e, st) {
+      debugPrint('Unexpected: $e\n$st');
+    }
+    isLoadingMoreHistory = false;
     notifyListeners();
   }
 

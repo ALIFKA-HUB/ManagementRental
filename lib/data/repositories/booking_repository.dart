@@ -12,6 +12,20 @@ class BookingConflictException implements Exception {
   String toString() => message;
 }
 
+/// TASK-10: one page of paginated history plus the cursor needed to fetch the
+/// next page. [lastDoc] is the raw Firestore snapshot of the final item (fed
+/// back as `startAfter`); [hasMore] is false once the last page is reached.
+class BookingPage {
+  final List<BookingModel> items;
+  final DocumentSnapshot? lastDoc;
+  final bool hasMore;
+  const BookingPage({
+    required this.items,
+    required this.lastDoc,
+    required this.hasMore,
+  });
+}
+
 class BookingRepository {
   final _db = FirebaseFirestore.instance;
   CollectionReference get _col => _db.collection('bookings');
@@ -142,15 +156,25 @@ class BookingRepository {
     return list;
   }
 
-  Future<List<BookingModel>> getCompletedBookings({DocumentSnapshot? lastDoc}) async {
+  /// TASK-10: one page of history, carrying the cursor + hasMore so the
+  /// ViewModel can append the next batch instead of replacing the list.
+  /// [startAfter] is the raw [DocumentSnapshot] of the last item already shown.
+  Future<BookingPage> getCompletedBookings({
+    DocumentSnapshot? startAfter,
+    int limit = 20,
+  }) async {
     // All bookings, sorted by most recent activity — no status filter.
     // orderBy + limit pushed to Firestore so reads stay bounded (M-6).
-    var query = _col
-        .orderBy('updatedAt', descending: true)
-        .limit(20);
-    if (lastDoc != null) query = query.startAfterDocument(lastDoc);
+    var query = _col.orderBy('updatedAt', descending: true).limit(limit);
+    if (startAfter != null) query = query.startAfterDocument(startAfter);
     final snap = await query.get();
-    return snap.docs.map(BookingModel.fromFirestore).toList();
+
+    return BookingPage(
+      items: snap.docs.map(BookingModel.fromFirestore).toList(),
+      lastDoc: snap.docs.isEmpty ? null : snap.docs.last,
+      // A full page means there is (probably) more; a short page means the end.
+      hasMore: snap.docs.length == limit,
+    );
   }
 
   Future<bool> checkConflict({
