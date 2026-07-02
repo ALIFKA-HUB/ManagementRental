@@ -89,14 +89,15 @@ class _ScheduleContent extends StatelessWidget {
             ),
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
-                if (events.isEmpty) return const SizedBox();
+                final activeEvents = events.where((e) => e.bookingStatus.name != 'cancelled').toList();
+                if (activeEvents.isEmpty) return const SizedBox();
                 final isSelected = isSameDay(date, vm.selectedDay);
                 return Positioned(
                   bottom: 4,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: List.generate(
-                      events.length > 3 ? 3 : events.length,
+                      activeEvents.length > 3 ? 3 : activeEvents.length,
                       (index) => Container(
                         margin: const EdgeInsets.symmetric(horizontal: 1.5),
                         width: 6,
