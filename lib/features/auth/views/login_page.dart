@@ -76,9 +76,15 @@ class _LoginPageState extends State<LoginPage> {
                   label: 'Password',
                   controller: _passwordCtrl,
                   obscureText: !_passwordVisible,
-                  suffixIcon: IconButton(
-                    icon: Icon(_passwordVisible ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                  suffixIcon: GestureDetector(
+                    onTap: () => setState(() => _passwordVisible = !_passwordVisible),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Icon(
+                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        color: AppColors.textSecondaryLight,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
