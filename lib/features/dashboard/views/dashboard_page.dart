@@ -130,45 +130,87 @@ class _DashboardContent extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xl),
 
                   // COMMAND ROW (Quick Actions)
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                      Expanded(
-                        child: _ActionCard(
-                          title: 'Buat Booking',
-                          subtitle: 'Transaksi Baru',
-                          icon: Icons.add_circle_outline,
-                          color: AppColors.primary,
-                          onTap: () {
-                            final bookingVm = BookingViewModel()..loadActiveBookings();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ChangeNotifierProvider.value(
-                                  value: bookingVm,
-                                  child: const BookingFormPage(),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth >= 500;
+                      
+                      if (isWide) {
+                        return IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: _ActionCard(
+                                  title: 'Buat Booking',
+                                  subtitle: 'Transaksi Baru',
+                                  icon: Icons.add_circle_outline,
+                                  color: AppColors.primary,
+                                  onTap: () {
+                                    final bookingVm = BookingViewModel()..loadActiveBookings();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => ChangeNotifierProvider.value(
+                                          value: bookingVm,
+                                          child: const BookingFormPage(),
+                                        ),
+                                      ),
+                                    ).then((_) => vm.load());
+                                  },
                                 ),
                               ),
-                            ).then((_) => vm.load());
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: _ActionCard(
-                          title: 'Kelola Armada',
-                          subtitle: 'Cek Kendaraan',
-                          icon: Icons.directions_car_outlined,
-                          color: AppColors.secondary,
-                          onTap: onGoToArmada ?? () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ArmadaPage()),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: _ActionCard(
+                                  title: 'Kelola Armada',
+                                  subtitle: 'Cek Kendaraan',
+                                  icon: Icons.directions_car_outlined,
+                                  color: AppColors.secondary,
+                                  onTap: onGoToArmada ?? () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const ArmadaPage()),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
+                        );
+                      } else {
+                        return Column(
+                          children: [
+                            _ActionCard(
+                              title: 'Buat Booking',
+                              subtitle: 'Transaksi Baru',
+                              icon: Icons.add_circle_outline,
+                              color: AppColors.primary,
+                              onTap: () {
+                                final bookingVm = BookingViewModel()..loadActiveBookings();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ChangeNotifierProvider.value(
+                                      value: bookingVm,
+                                      child: const BookingFormPage(),
+                                    ),
+                                  ),
+                                ).then((_) => vm.load());
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _ActionCard(
+                              title: 'Kelola Armada',
+                              subtitle: 'Cek Kendaraan',
+                              icon: Icons.directions_car_outlined,
+                              color: AppColors.secondary,
+                              onTap: onGoToArmada ?? () => Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const ArmadaPage()),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: AppSpacing.xl),
 
@@ -423,31 +465,58 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.card),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.05),
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          border: Border.all(color: theme.colorScheme.outline),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: color.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: AppSpacing.md),
-            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: color)),
-            const SizedBox(height: 4),
-            Text(subtitle, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondaryLight)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondaryLight,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400, size: 18),
           ],
         ),
       ),
