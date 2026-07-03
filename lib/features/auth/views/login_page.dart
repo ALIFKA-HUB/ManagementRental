@@ -65,7 +65,7 @@ class _LoginPageState extends State<LoginPage> {
                 // Email
                 AppInput(
                   label: 'Email',
-                  hint: 'admin@rentalin.com',
+                  hint: 'email@rentalin.com',
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                 ),
