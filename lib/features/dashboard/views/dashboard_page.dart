@@ -428,16 +428,18 @@ class _DashboardSkeleton extends StatelessWidget {
       children: [
         const AppSkeleton(height: 140, borderRadius: 16),
         const SizedBox(height: AppSpacing.lg),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(
-              3,
-              (_) => const Padding(
-                padding: EdgeInsets.only(right: 12),
-                child: AppSkeleton(width: 140, height: 70, borderRadius: 12),
-              ),
-            ),
+        SizedBox(
+          height: 78,
+          child: PageView.builder(
+            controller: PageController(initialPage: 1, viewportFraction: 0.7),
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.0),
+                child: AppSkeleton(height: 78, borderRadius: 12),
+              );
+            },
           ),
         ),
         const SizedBox(height: AppSpacing.xl),
