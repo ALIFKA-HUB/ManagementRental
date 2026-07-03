@@ -265,7 +265,6 @@ class _CompactStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 160,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -277,12 +276,18 @@ class _CompactStat extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-              Text(label, style: Theme.of(context).textTheme.bodySmall),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                ),
+                Text(label, style: Theme.of(context).textTheme.bodySmall, overflow: TextOverflow.ellipsis),
+              ],
+            ),
           ),
         ],
       ),
@@ -530,23 +535,21 @@ class _ActionCard extends StatelessWidget {
 
 class ContinuousMarquee extends StatefulWidget {
   final List<Widget> children;
-  final double itemWidth;
-  const ContinuousMarquee({super.key, required this.children, this.itemWidth = 168.0});
+  const ContinuousMarquee({super.key, required this.children});
 
   @override
   State<ContinuousMarquee> createState() => _ContinuousMarqueeState();
 }
 
 class _ContinuousMarqueeState extends State<ContinuousMarquee> {
-  late ScrollController _scrollController;
+  late PageController _pageController;
   Timer? _timer;
-
-  final Key _centerKey = const ValueKey('marquee_center');
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
+    final initialPage = widget.children.length * 10000;
+    _pageController = PageController(initialPage: initialPage, viewportFraction: 0.7);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startAutoScroll();
     });
@@ -555,12 +558,8 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
   void _startAutoScroll() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_scrollController.hasClients) {
-        double currentOffset = _scrollController.offset;
-        double nextOffset = ((currentOffset / widget.itemWidth).floor() + 1) * widget.itemWidth;
-        
-        _scrollController.animateTo(
-          nextOffset,
+      if (_pageController.hasClients) {
+        _pageController.nextPage(
           duration: const Duration(milliseconds: 500),
           curve: Curves.easeOutQuart,
         );
@@ -575,17 +574,8 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
   @override
   void dispose() {
     _timer?.cancel();
-    _scrollController.dispose();
+    _pageController.dispose();
     super.dispose();
-  }
-
-  Widget _buildItem(int index) {
-    final len = widget.children.length;
-    final normalizedIndex = (index % len + len) % len;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: widget.children[normalizedIndex],
-    );
   }
 
   @override
@@ -596,24 +586,16 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
         onPointerDown: (_) => _pauseAutoScroll(),
         onPointerUp: (_) => _startAutoScroll(),
         onPointerCancel: (_) => _startAutoScroll(),
-        child: CustomScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          center: _centerKey,
-          slivers: [
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildItem(-index - 1),
-              ),
-            ),
-            SliverList(
-              key: _centerKey,
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => _buildItem(index),
-              ),
-            ),
-          ],
+        child: PageView.builder(
+          controller: _pageController,
+          itemBuilder: (context, index) {
+            final len = widget.children.length;
+            final normalizedIndex = index % len;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: widget.children[normalizedIndex],
+            );
+          },
         ),
       ),
     );
