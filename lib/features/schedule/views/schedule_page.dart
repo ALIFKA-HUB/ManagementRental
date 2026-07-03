@@ -147,7 +147,7 @@ class _ScheduleContent extends StatelessWidget {
           // List booking untuk hari terpilih
           Expanded(
             child: vm.isLoading
-                ? const AppListSkeleton()
+                ? const _ScheduleSkeleton()
                 : vm.selectedDayBookings.isEmpty
                     ? const AppEmptyState(
                         title: 'Tidak ada jadwal',
@@ -237,6 +237,20 @@ class _ScheduleBookingCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ScheduleSkeleton extends StatelessWidget {
+  const _ScheduleSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
+      itemCount: 4,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, _) => const AppSkeleton(height: 85, borderRadius: 14),
     );
   }
 }
