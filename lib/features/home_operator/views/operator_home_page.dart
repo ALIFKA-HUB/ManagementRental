@@ -194,22 +194,39 @@ class _StatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final hasTrip = todayCount > 0;
-    final color = hasTrip ? AppColors.primary : Colors.grey.shade100;
-    final textColor = hasTrip ? Colors.black : Colors.grey;
+    
+    final bgColor = hasTrip 
+        ? AppColors.primary 
+        : (isDark ? AppColors.surfaceMutedDark : AppColors.surfaceMutedLight);
+        
+    final textColor = hasTrip 
+        ? AppColors.onPrimary 
+        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight);
+        
+    final subtitleColor = hasTrip 
+        ? AppColors.onPrimary.withValues(alpha: 0.8) 
+        : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight);
+
+    final iconColor = hasTrip 
+        ? AppColors.onPrimary 
+        : (isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: color,
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
           Icon(
             hasTrip ? Icons.directions_car : Icons.event_available_outlined,
-            color: hasTrip ? Colors.black87 : Colors.grey,
+            color: iconColor,
             size: 36,
           ),
           const SizedBox(width: 14),
@@ -225,7 +242,7 @@ class _StatusBanner extends StatelessWidget {
                   isDriver
                       ? (hasTrip ? 'Siap berangkat!' : 'Istirahat dulu ya 😊')
                       : 'Tampil semua jadwal hari ini',
-                  style: TextStyle(fontSize: 13, color: textColor.withValues(alpha: 0.8)),
+                  style: TextStyle(fontSize: 13, color: subtitleColor),
                 ),
               ],
             ),
