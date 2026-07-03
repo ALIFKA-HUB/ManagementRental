@@ -40,11 +40,22 @@ class DashboardViewModel extends ChangeNotifier {
   List<BookingModel> upcomingToday = [];
   bool isLoading = false;
   String? errorMessage;
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  void _safeNotify() {
+    if (!_isDisposed) notifyListeners();
+  }
 
   Future<void> load() async {
     isLoading = true;
     errorMessage = null;
-    notifyListeners();
+    _safeNotify();
 
     try {
       final now = DateTime.now();
@@ -58,6 +69,8 @@ class DashboardViewModel extends ChangeNotifier {
         _bookingRepo.getBookingsForDate(today),
       ]);
 
+      if (_isDisposed) return;
+
       final vehicles = results[0] as dynamic;
       final drivers = results[1] as dynamic;
       final active = results[2] as List<BookingModel>;
@@ -68,7 +81,7 @@ class DashboardViewModel extends ChangeNotifier {
       final monthCompleted = monthly.where((b) => b.bookingStatus == BookingStatus.completed);
       final todayCompleted = todayBookings.where((b) => b.bookingStatus == BookingStatus.completed);
 
-      // Pending payment
+      // Muted text light
       final pending = active.where((b) =>
         b.paymentStatus == PaymentStatus.unpaid ||
         b.paymentStatus == PaymentStatus.dp
@@ -110,6 +123,6 @@ class DashboardViewModel extends ChangeNotifier {
     }
 
     isLoading = false;
-    notifyListeners();
+    _safeNotify();
   }
 }
