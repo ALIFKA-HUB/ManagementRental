@@ -105,7 +105,7 @@ class DashboardViewModel extends ChangeNotifier {
         _ => 'Gagal memuat dashboard.',
       };
     } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+      debugPrint('DashboardViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat dashboard.';
     }
 

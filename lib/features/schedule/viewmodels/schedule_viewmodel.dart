@@ -87,7 +87,7 @@ class ScheduleViewModel extends ChangeNotifier {
         },
       );
     } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+      debugPrint('ScheduleViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat jadwal.';
       isLoading = false;
       notifyListeners();
