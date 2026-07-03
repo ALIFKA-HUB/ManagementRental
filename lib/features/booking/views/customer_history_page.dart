@@ -5,6 +5,7 @@ import 'package:rentalin/core/widgets/app_chip.dart';
 import 'package:rentalin/core/widgets/app_empty_state.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
+import 'package:rentalin/core/widgets/app_skeleton.dart';
 
 /// TASK-11: all bookings for a single customer (keyed by phone), with a small
 /// summary header (total trips + total spend). Read-only.
@@ -43,7 +44,7 @@ class _CustomerHistoryPageState extends State<CustomerHistoryPage> {
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const _HistorySkeleton();
           }
           if (snapshot.hasError) {
             return const AppEmptyState(
@@ -144,6 +145,27 @@ class _SummaryItem extends StatelessWidget {
         Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
         const SizedBox(height: 2),
         Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+}
+
+class _HistorySkeleton extends StatelessWidget {
+  const _HistorySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Summary header skeleton
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: const AppSkeleton(height: 70, borderRadius: 12),
+        ),
+        // List skeleton
+        const Expanded(
+          child: AppListSkeleton(itemCount: 4, height: 100),
+        ),
       ],
     );
   }
