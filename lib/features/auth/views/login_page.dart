@@ -18,6 +18,19 @@ class _LoginPageState extends State<LoginPage> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _passwordVisible = false;
+  bool _isInitLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) {
+        setState(() {
+          _isInitLoading = false;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -34,6 +47,10 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isInitLoading) {
+      return const LoginSkeleton();
+    }
+
     final vm = context.watch<AuthViewModel>();
 
     return Scaffold(
