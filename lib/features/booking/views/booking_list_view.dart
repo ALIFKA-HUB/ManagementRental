@@ -118,12 +118,28 @@ class _BookingListViewState extends State<BookingListView> {
                   BookingFilter.thisWeek: 'Minggu Ini',
                 };
                 final isSelected = vm.currentFilter == f;
+                final theme = Theme.of(context);
+                final isDark = theme.brightness == Brightness.dark;
+                
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
+                    showCheckmark: false,
                     label: Text(labels[f]!),
+                    labelStyle: TextStyle(
+                      color: isSelected 
+                          ? Colors.white 
+                          : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
                     selected: isSelected,
-                    selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                    selectedColor: AppColors.primary,
+                    backgroundColor: isDark ? AppColors.surfaceMutedDark : AppColors.surfaceMutedLight,
+                    side: BorderSide(
+                      color: isSelected 
+                          ? AppColors.primary 
+                          : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                    ),
                     onSelected: (_) => vm.filterBookings(f),
                   ),
                 );
