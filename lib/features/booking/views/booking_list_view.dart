@@ -150,7 +150,7 @@ class _BookingListViewState extends State<BookingListView> {
 
         Expanded(
           child: vm.isLoading && vm.filteredBookings.isEmpty
-              ? const AppListSkeleton()
+              ? const AppListSkeleton(height: 140)
               : vm.filteredBookings.isEmpty
                   ? const AppEmptyState(
                       title: 'Tidak ada booking aktif',
@@ -178,7 +178,7 @@ class _BookingListViewState extends State<BookingListView> {
 
   Widget _buildHistoryTab(BookingViewModel vm, bool isAdmin) {
     if (vm.isLoadingHistory && vm.historyBookings.isEmpty) {
-      return const AppListSkeleton();
+      return const AppListSkeleton(height: 140);
     }
     if (vm.historyBookings.isEmpty) {
       return const AppEmptyState(
