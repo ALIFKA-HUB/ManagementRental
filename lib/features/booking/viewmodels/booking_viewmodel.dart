@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:rentalin/core/utils/app_time.dart';
 import 'package:rentalin/data/models/booking_log_model.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/models/driver_model.dart';
@@ -262,8 +263,7 @@ class BookingViewModel extends ChangeNotifier {
   }
 
   void _applyFilter() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final today = AppTime.wibDay(DateTime.now());
     final endOfWeek = today.add(const Duration(days: 7));
 
     // 1) time-window chip.
@@ -274,15 +274,19 @@ class BookingViewModel extends ChangeNotifier {
         break;
       case BookingFilter.today:
         result = activeBookings.where((b) {
-          final start = DateTime(b.startDateTime.year, b.startDateTime.month, b.startDateTime.day);
-          return start == today;
+          final startDay = AppTime.wibDay(b.startDateTime);
+          final endDay = AppTime.wibDay(b.endDateTime);
+          // Booking hari ini jika hari ini berada di antara tanggal mulai dan selesai
+          return !today.isBefore(startDay) && !today.isAfter(endDay);
         }).toList();
         break;
       case BookingFilter.thisWeek:
-        result = activeBookings.where((b) =>
-          b.startDateTime.isAfter(today.subtract(const Duration(seconds: 1))) &&
-          b.startDateTime.isBefore(endOfWeek)
-        ).toList();
+        result = activeBookings.where((b) {
+          final startDay = AppTime.wibDay(b.startDateTime);
+          final endDay = AppTime.wibDay(b.endDateTime);
+          // Booking minggu ini jika rentang booking overlap dengan rentang [today, endOfWeek]
+          return !endDay.isBefore(today) && !startDay.isAfter(endOfWeek);
+        }).toList();
         break;
     }
 
