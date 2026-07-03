@@ -91,7 +91,7 @@ class _OperatorHomeContent extends StatelessWidget {
         ],
       ),
       body: vm.isLoading && vm.todayBookings.isEmpty && vm.upcomingBookings.isEmpty
-          ? const AppListSkeleton()
+          ? const _OperatorHomeSkeleton()
           : RefreshIndicator(
               onRefresh: () => vm.load(userId),
               child: SingleChildScrollView(
@@ -383,6 +383,27 @@ class _TripCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _OperatorHomeSkeleton extends StatelessWidget {
+  const _OperatorHomeSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: const [
+        // Banner Skeleton
+        AppSkeleton(height: 80, borderRadius: 16),
+        SizedBox(height: 24),
+        // Title Skeleton
+        AppSkeleton(height: 24, width: 140, borderRadius: 4),
+        SizedBox(height: 12),
+        // List Skeleton
+        AppListSkeleton(itemCount: 3, height: 130),
+      ],
     );
   }
 }
