@@ -55,7 +55,10 @@ class _DashboardContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Halo, ${auth.currentUser?.displayName ?? 'Admin'}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    'Halo, ${auth.currentUser?.displayName.isNotEmpty == true ? auth.currentUser!.displayName : 'Admin'}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
                   Text(dateFmt.format(now), style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
