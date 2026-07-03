@@ -125,7 +125,7 @@ class BookingViewModel extends ChangeNotifier {
         _ => 'Gagal memuat riwayat booking.',
       };
     } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+      debugPrint('BookingViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat riwayat booking.';
     }
     isLoadingHistory = false;
@@ -150,7 +150,7 @@ class BookingViewModel extends ChangeNotifier {
       debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
       // Keep what we already have; allow a later retry.
     } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+      debugPrint('BookingViewModel Unexpected: $e\n$st');
     }
     isLoadingMoreHistory = false;
     notifyListeners();
@@ -398,7 +398,7 @@ class BookingViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+      debugPrint('BookingViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal membuat booking.';
       isLoading = false;
       notifyListeners();

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:rentalin/core/utils/app_time.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
 import 'package:rentalin/data/repositories/driver_repository.dart';
@@ -28,19 +29,23 @@ class OperatorHomeViewModel extends ChangeNotifier {
         _driverId = driver?.driverId;
       }
 
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
+      final today = AppTime.wibDay(DateTime.now());
 
       if (_driverId != null) {
         // Booking berdasarkan supir
         final active = await _bookingRepo.getBookingsByDriver(_driverId!);
         todayBookings = active.where((b) {
-          final startDay = DateTime(b.startDateTime.year, b.startDateTime.month, b.startDateTime.day);
-          return startDay == today;
+          final startDay = AppTime.wibDay(b.startDateTime);
+          final endDay = AppTime.wibDay(b.endDateTime);
+          // Muncul di jadwal hari ini jika hari ini berada di antara tgl mulai dan selesai
+          return !today.isBefore(startDay) && !today.isAfter(endDay);
         }).toList()
           ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
 
-        upcomingBookings = active.where((b) => b.startDateTime.isAfter(today)).toList()
+        upcomingBookings = active.where((b) {
+          final startDay = AppTime.wibDay(b.startDateTime);
+          return startDay.isAfter(today);
+        }).toList()
           ..sort((a, b) => a.startDateTime.compareTo(b.startDateTime));
       } else {
         // TASK-05: an operator not linked to a driver has no assigned trips and
@@ -57,7 +62,7 @@ class OperatorHomeViewModel extends ChangeNotifier {
         _ => 'Gagal memuat data.',
       };
     } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+      debugPrint('OperatorHomeViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat data.';
     }
 
