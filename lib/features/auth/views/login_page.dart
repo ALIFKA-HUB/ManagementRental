@@ -45,19 +45,14 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 const SizedBox(height: 40),
 
-                // Logo
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
+                Text(
+                  'Rentalin.',
+                  style: AppTypography.heading.copyWith(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w100,
                     color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(Icons.directions_car, size: 44, color: Colors.black),
                 ),
-                const SizedBox(height: 20),
-
-                Text('Rentalin', style: AppTypography.heading),
                 const SizedBox(height: 6),
                 Text(
                   'Manajemen armada & booking kendaraan',
