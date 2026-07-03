@@ -80,9 +80,22 @@ class _LoginPageState extends State<LoginPage> {
                     onTap: () => setState(() => _passwordVisible = !_passwordVisible),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Icon(
-                        _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                        color: AppColors.textSecondaryLight,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder: (Widget child, Animation<double> animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Icon(
+                          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                          key: ValueKey<bool>(_passwordVisible),
+                          color: AppColors.textSecondaryLight,
+                        ),
                       ),
                     ),
                   ),
