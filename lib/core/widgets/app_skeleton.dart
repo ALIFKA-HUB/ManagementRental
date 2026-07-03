@@ -35,13 +35,14 @@ class _AppSkeletonState extends State<AppSkeleton> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return FadeTransition(
       opacity: _anim,
       child: Container(
         width: widget.width,
         height: widget.height,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.outlineVariant,
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
           borderRadius: BorderRadius.circular(widget.borderRadius),
         ),
       ),

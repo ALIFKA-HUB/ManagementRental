@@ -5,6 +5,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_input.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_skeleton.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -120,13 +121,51 @@ class _LoginPageState extends State<LoginPage> {
 
                 const SizedBox(height: 24),
 
-                AppButton(
+                 AppButton(
                   label: 'Masuk',
                   onPressed: vm.isLoading ? null : _onLogin,
                   isLoading: vm.isLoading,
                 ),
 
                 const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class LoginSkeleton extends StatelessWidget {
+  const LoginSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: 40),
+                // Title skeleton
+                AppSkeleton(width: 160, height: 44, borderRadius: 8),
+                SizedBox(height: 12),
+                // Subtitle skeleton
+                AppSkeleton(width: 250, height: 16, borderRadius: 4),
+                SizedBox(height: 40),
+                // Email field skeleton
+                AppSkeleton(height: 56, borderRadius: 12),
+                SizedBox(height: 16),
+                // Password field skeleton
+                AppSkeleton(height: 56, borderRadius: 12),
+                SizedBox(height: 24),
+                // Button skeleton
+                AppSkeleton(height: 52, borderRadius: 12),
+                SizedBox(height: 40),
               ],
             ),
           ),
