@@ -265,6 +265,7 @@ class _CompactStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 160,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -529,7 +530,8 @@ class _ActionCard extends StatelessWidget {
 
 class ContinuousMarquee extends StatefulWidget {
   final List<Widget> children;
-  const ContinuousMarquee({super.key, required this.children});
+  final double itemWidth;
+  const ContinuousMarquee({super.key, required this.children, this.itemWidth = 168.0});
 
   @override
   State<ContinuousMarquee> createState() => _ContinuousMarqueeState();
@@ -552,9 +554,16 @@ class _ContinuousMarqueeState extends State<ContinuousMarquee> {
 
   void _startAutoScroll() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.offset + 1.0);
+        double currentOffset = _scrollController.offset;
+        double nextOffset = ((currentOffset / widget.itemWidth).floor() + 1) * widget.itemWidth;
+        
+        _scrollController.animateTo(
+          nextOffset,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutQuart,
+        );
       }
     });
   }
