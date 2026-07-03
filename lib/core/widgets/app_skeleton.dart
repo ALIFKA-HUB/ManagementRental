@@ -24,7 +24,7 @@ class _AppSkeletonState extends State<AppSkeleton> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.2, end: 0.6).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _anim = Tween<double>(begin: 0.4, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
