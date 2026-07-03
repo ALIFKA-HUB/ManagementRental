@@ -53,7 +53,10 @@ class _OperatorHomeContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Halo, ${auth.currentUser?.displayName ?? 'Operator'}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(
+                    'Halo, ${auth.currentUser?.displayName.isNotEmpty == true ? auth.currentUser!.displayName : 'Operator'}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  ),
                   Text(dateFmt.format(now), style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
