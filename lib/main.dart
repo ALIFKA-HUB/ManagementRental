@@ -9,6 +9,8 @@ import 'features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
 
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -34,6 +36,7 @@ class RentalinApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, _) {
         return MaterialApp(
+          scaffoldMessengerKey: scaffoldMessengerKey,
           title: 'Rentalin',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
