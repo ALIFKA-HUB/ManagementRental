@@ -42,7 +42,32 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _onLogin() async {
     final vm = context.read<AuthViewModel>();
     final ok = await vm.login(_emailCtrl.text, _passwordCtrl.text);
-    if (!ok || !mounted) return;
+    if (!mounted) return;
+    if (!ok) {
+      if (vm.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text(vm.errorMessage!)),
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Tutup',
+              textColor: Colors.white,
+              onPressed: () {
+                if (mounted) ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
+            ),
+          ),
+        );
+      }
+      return;
+    }
   }
 
   @override
