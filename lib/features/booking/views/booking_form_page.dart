@@ -36,6 +36,18 @@ class _BookingFormPageState extends State<BookingFormPage> {
   PaymentStatus _paymentStatus = PaymentStatus.unpaid;
   List<String> _routes = [];
 
+  final _nameFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _priceFocus = FocusNode();
+  final _vehicleFocus = FocusNode();
+  final _driverFocus = FocusNode();
+
+  String? _nameError;
+  String? _phoneError;
+  String? _priceError;
+  String? _vehicleError;
+  String? _driverError;
+
   bool _formDataLoaded = false;
 
   bool get _isEdit => widget.existing != null;
@@ -87,6 +99,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
     _phoneCtrl.dispose();
     _priceCtrl.dispose();
     _notesCtrl.dispose();
+    _nameFocus.dispose();
+    _phoneFocus.dispose();
+    _priceFocus.dispose();
+    _vehicleFocus.dispose();
+    _driverFocus.dispose();
     super.dispose();
   }
 
@@ -137,19 +154,68 @@ class _BookingFormPageState extends State<BookingFormPage> {
   }
 
   bool _validate() {
-    if (_nameCtrl.text.isEmpty) { _showSnack('Nama penyewa wajib diisi.'); return false; }
-    if (_phoneCtrl.text.isEmpty) { _showSnack('Nomor HP wajib diisi.'); return false; }
-    if (_selectedVehicle == null) { _showSnack('Pilih kendaraan.'); return false; }
-    if (_selectedDriver == null) { _showSnack('Pilih supir.'); return false; }
-    if (_startDateTime == null) { _showSnack('Pilih waktu mulai.'); return false; }
-    if (_endDateTime == null) { _showSnack('Pilih waktu selesai.'); return false; }
-    // M-2 (already validated in VM) + explicit end > start guard
-    if (!_endDateTime!.isAfter(_startDateTime!)) { _showSnack('Waktu selesai harus setelah waktu mulai.'); return false; }
-    // M-3: validate parsed numeric value, not just emptiness
+    setState(() {
+      _nameError = null;
+      _phoneError = null;
+      _priceError = null;
+      _vehicleError = null;
+      _driverError = null;
+    });
+
+    bool isValid = true;
+    FocusNode? firstErrorFocus;
+
+    if (_nameCtrl.text.trim().isEmpty) {
+      _nameError = 'Nama penyewa wajib diisi.';
+      isValid = false;
+      firstErrorFocus ??= _nameFocus;
+    }
+    if (_phoneCtrl.text.trim().isEmpty) {
+      _phoneError = 'Nomor HP wajib diisi.';
+      isValid = false;
+      firstErrorFocus ??= _phoneFocus;
+    }
+    if (_selectedVehicle == null) {
+      _vehicleError = 'Pilih kendaraan.';
+      isValid = false;
+      firstErrorFocus ??= _vehicleFocus;
+    }
+    if (_selectedDriver == null) {
+      _driverError = 'Pilih supir.';
+      isValid = false;
+      firstErrorFocus ??= _driverFocus;
+    }
+    if (_startDateTime == null) {
+      _showSnack('Pilih waktu mulai.');
+      isValid = false;
+    } else if (_endDateTime == null) {
+      _showSnack('Pilih waktu selesai.');
+      isValid = false;
+    } else if (!_endDateTime!.isAfter(_startDateTime!)) {
+      _showSnack('Waktu selesai harus setelah waktu mulai.');
+      isValid = false;
+    }
+    
     final parsedPrice = double.tryParse(_priceCtrl.text.replaceAll(RegExp(r'[^0-9]'), ''));
-    if (parsedPrice == null || parsedPrice <= 0) { _showSnack('Harga sewa tidak valid.'); return false; }
-    if (_routes.isEmpty) { _showSnack('Minimal 1 rute harus diisi.'); return false; }
-    return true;
+    if (parsedPrice == null || parsedPrice <= 0) {
+      _priceError = 'Harga sewa tidak valid.';
+      isValid = false;
+      firstErrorFocus ??= _priceFocus;
+    }
+
+    if (_routes.isEmpty) {
+      _showSnack('Minimal 1 rute harus diisi.');
+      isValid = false;
+    }
+
+    if (!isValid) {
+      setState(() {});
+      if (firstErrorFocus != null) {
+        firstErrorFocus.requestFocus();
+      }
+    }
+
+    return isValid;
   }
 
   void _showSnack(String msg) {
@@ -259,9 +325,20 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   // Customer
                   Text('Data Penyewa', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  CustomerAutocomplete(nameController: _nameCtrl, phoneController: _phoneCtrl),
+                  CustomerAutocomplete(
+                    nameController: _nameCtrl, 
+                    phoneController: _phoneCtrl,
+                    focusNode: _nameFocus,
+                    errorText: _nameError,
+                  ),
                   const SizedBox(height: 12),
-                  AppInput(label: 'Nomor HP', controller: _phoneCtrl, hint: '08123456789', keyboardType: TextInputType.phone),
+                  AppInput(
+                    label: 'Nomor HP', 
+                    controller: _phoneCtrl, 
+                    hint: '08123456789', 
+                    keyboardType: TextInputType.phone,
+                    errorText: _phoneError,
+                  ),
 
                   const Divider(height: 32),
 
@@ -299,10 +376,14 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   // (grayed) and annotated with the dates they're taken, so the
                   // admin sees why an option is unavailable without submitting.
                   DropdownButtonFormField<VehicleModel>(
+                    focusNode: _vehicleFocus,
                     value: _selectedVehicle,
                     isExpanded: true,
                     hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Kendaraan'),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      errorText: _vehicleError,
+                    ),
                     items: (_startDateTime == null || _endDateTime == null) ? null : vm.readyVehicles.map((v) {
                       final conflict = vm.vehicleConflict(v.vehicleId, _startDateTime, _endDateTime, excludeBookingId: widget.existing?.bookingId);
                       return _buildOptionItem<VehicleModel>(
@@ -316,10 +397,14 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   const SizedBox(height: 12),
 
                   DropdownButtonFormField<DriverModel>(
+                    focusNode: _driverFocus,
                     value: _selectedDriver,
                     isExpanded: true,
                     hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Supir'),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      errorText: _driverError,
+                    ),
                     items: (_startDateTime == null || _endDateTime == null) ? null : vm.standbyDrivers.map((d) {
                       final conflict = vm.driverConflict(d.driverId, _startDateTime, _endDateTime, excludeBookingId: widget.existing?.bookingId);
                       return _buildOptionItem<DriverModel>(
@@ -342,7 +427,13 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   Text('Harga & Pembayaran', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
 
-                  AppInput(label: 'Harga Sewa (Rp)', controller: _priceCtrl, keyboardType: TextInputType.number, hint: '500000'),
+                  AppInput(
+                    label: 'Harga Sewa (Rp)', 
+                    controller: _priceCtrl, 
+                    keyboardType: TextInputType.number, 
+                    hint: '500000',
+                    errorText: _priceError,
+                  ),
                   const SizedBox(height: 12),
 
                   DropdownButtonFormField<PaymentStatus>(

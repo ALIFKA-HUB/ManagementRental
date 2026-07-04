@@ -6,11 +6,15 @@ import 'package:rentalin/data/repositories/customer_repository.dart';
 class CustomerAutocomplete extends StatefulWidget {
   final TextEditingController nameController;
   final TextEditingController phoneController;
+  final FocusNode? focusNode;
+  final String? errorText;
 
   const CustomerAutocomplete({
     super.key,
     required this.nameController,
     required this.phoneController,
+    this.focusNode,
+    this.errorText,
   });
 
   @override
@@ -58,10 +62,12 @@ class _CustomerAutocompleteState extends State<CustomerAutocomplete> {
       children: [
         TextField(
           controller: widget.nameController,
+          focusNode: widget.focusNode,
           onChanged: _onNameChanged,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Nama Penyewa',
             hintText: 'Ketik nama untuk pencarian',
+            errorText: widget.errorText,
           ),
         ),
         if (_showSuggestions)
