@@ -66,15 +66,17 @@ class _DashboardContent extends StatelessWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
-            tooltip: 'Keluar',
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Keluar?'),
-                  content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
+          Semantics(
+            label: 'btn_logout',
+            child: IconButton(
+              icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+              tooltip: 'Keluar',
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Keluar?'),
+                    content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
                     TextButton(
@@ -101,20 +103,23 @@ class _DashboardContent extends StatelessWidget {
                 children: [
                   if (vm.stats != null) ...[
                     // HERO METRIC
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(AppRadius.card),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Pendapatan Hari Ini', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                          const SizedBox(height: 8),
-                          Text(currency.format(vm.stats!.todayRevenue), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-                        ],
+                    Semantics(
+                      label: 'card_pendapatan',
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Pendapatan Hari Ini', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                            const SizedBox(height: 8),
+                            Text(currency.format(vm.stats!.todayRevenue), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
