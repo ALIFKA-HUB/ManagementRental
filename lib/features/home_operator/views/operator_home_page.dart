@@ -64,15 +64,17 @@ class _OperatorHomeContent extends StatelessWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
-            tooltip: 'Keluar',
-            onPressed: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Keluar?'),
-                  content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
+          Semantics(
+            label: 'btn_logout',
+            child: IconButton(
+              icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+              tooltip: 'Keluar',
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Keluar?'),
+                    content: const Text('Apakah kamu yakin ingin keluar dari aplikasi?'),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
                     TextButton(

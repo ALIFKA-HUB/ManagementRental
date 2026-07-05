@@ -123,24 +123,27 @@ class _BookingListViewState extends State<BookingListView> {
                 
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    showCheckmark: false,
-                    label: Text(labels[f]!),
-                    labelStyle: TextStyle(
-                      color: isSelected 
-                          ? Colors.white 
-                          : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  child: Semantics(
+                    label: 'filter_${f.name}',
+                    child: FilterChip(
+                      showCheckmark: false,
+                      label: Text(labels[f]!),
+                      labelStyle: TextStyle(
+                        color: isSelected 
+                            ? Colors.white 
+                            : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      selected: isSelected,
+                      selectedColor: AppColors.primary,
+                      backgroundColor: isDark ? AppColors.surfaceMutedDark : AppColors.surfaceMutedLight,
+                      side: BorderSide(
+                        color: isSelected 
+                            ? AppColors.primary 
+                            : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                      ),
+                      onSelected: (_) => vm.filterBookings(f),
                     ),
-                    selected: isSelected,
-                    selectedColor: AppColors.primary,
-                    backgroundColor: isDark ? AppColors.surfaceMutedDark : AppColors.surfaceMutedLight,
-                    side: BorderSide(
-                      color: isSelected 
-                          ? AppColors.primary 
-                          : (isDark ? AppColors.borderDark : AppColors.borderLight),
-                    ),
-                    onSelected: (_) => vm.filterBookings(f),
                   ),
                 );
               }).toList(),
