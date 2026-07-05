@@ -48,7 +48,7 @@ class CustomerRepository {
       }
     } catch (e) {
       // L-2: log but don't rethrow — booking already committed
-      debugPrint('upsertCustomer failed (non-critical): $e');
+      if (kDebugMode) debugPrint('upsertCustomer failed (non-critical): $e');
     }
   }
 }

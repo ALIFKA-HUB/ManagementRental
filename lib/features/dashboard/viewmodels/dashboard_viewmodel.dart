@@ -110,7 +110,7 @@ class DashboardViewModel extends ChangeNotifier {
 
       upcomingToday = todayUpcoming;
     } on FirebaseException catch (e, st) {
-      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      if (kDebugMode) debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
       errorMessage = switch (e.code) {
         'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
         'permission-denied'   => 'Tidak punya akses ke data ini.',
@@ -118,7 +118,7 @@ class DashboardViewModel extends ChangeNotifier {
         _ => 'Gagal memuat dashboard.',
       };
     } catch (e, st) {
-      debugPrint('DashboardViewModel Unexpected: $e\n$st');
+      if (kDebugMode) debugPrint('DashboardViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat dashboard.';
     }
 

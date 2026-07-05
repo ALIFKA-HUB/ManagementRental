@@ -54,7 +54,7 @@ class OperatorHomeViewModel extends ChangeNotifier {
         upcomingBookings = [];
       }
     } on FirebaseException catch (e, st) {
-      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      if (kDebugMode) debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
       errorMessage = switch (e.code) {
         'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
         'permission-denied'   => 'Tidak punya akses ke data ini.',
@@ -62,7 +62,7 @@ class OperatorHomeViewModel extends ChangeNotifier {
         _ => 'Gagal memuat data.',
       };
     } catch (e, st) {
-      debugPrint('OperatorHomeViewModel Unexpected: $e\n$st');
+      if (kDebugMode) debugPrint('OperatorHomeViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat data.';
     }
 

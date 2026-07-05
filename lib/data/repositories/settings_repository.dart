@@ -26,7 +26,7 @@ class SettingsRepository {
       // Clamp to a sane range to avoid a misconfigured value blocking all bookings.
       return RentalPolicy(bufferMinutes: mins.clamp(0, 24 * 60));
     } catch (e) {
-      debugPrint('getRentalPolicy failed, using fallback: $e');
+      if (kDebugMode) debugPrint('getRentalPolicy failed, using fallback: $e');
       return RentalPolicy.fallback;
     }
   }

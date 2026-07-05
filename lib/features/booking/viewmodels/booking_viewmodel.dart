@@ -83,7 +83,7 @@ class BookingViewModel extends ChangeNotifier {
           _safeNotify();
         },
         onError: (e) {
-          debugPrint('Firestore Stream Error: $e');
+          if (kDebugMode) debugPrint('Firestore Stream Error: $e');
           if (e is FirebaseException) {
             errorMessage = switch (e.code) {
               'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
@@ -99,7 +99,7 @@ class BookingViewModel extends ChangeNotifier {
         },
       );
     } catch (e, st) {
-      debugPrint('Unexpected: $e\n$st');
+      if (kDebugMode) debugPrint('Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat booking.';
       isLoading = false;
       _safeNotify();
@@ -119,14 +119,14 @@ class BookingViewModel extends ChangeNotifier {
       _historyCursor = page.lastDoc;
       historyHasMore = page.hasMore;
     } on FirebaseException catch (e, st) {
-      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      if (kDebugMode) debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
       errorMessage = switch (e.code) {
         'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
         'permission-denied'   => 'Tidak punya akses ke data ini.',
         _ => 'Gagal memuat riwayat booking.',
       };
     } catch (e, st) {
-      debugPrint('BookingViewModel Unexpected: $e\n$st');
+      if (kDebugMode) debugPrint('BookingViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat riwayat booking.';
     }
     isLoadingHistory = false;
@@ -148,10 +148,10 @@ class BookingViewModel extends ChangeNotifier {
       _historyCursor = page.lastDoc ?? _historyCursor;
       historyHasMore = page.hasMore;
     } on FirebaseException catch (e, st) {
-      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      if (kDebugMode) debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
       // Keep what we already have; allow a later retry.
     } catch (e, st) {
-      debugPrint('BookingViewModel Unexpected: $e\n$st');
+      if (kDebugMode) debugPrint('BookingViewModel Unexpected: $e\n$st');
     }
     isLoadingMoreHistory = false;
     notifyListeners();
@@ -392,7 +392,7 @@ class BookingViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     } on FirebaseException catch (e, st) {
-      debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
+      if (kDebugMode) debugPrint('Firestore [${e.code}]: ${e.message}\n$st');
       errorMessage = switch (e.code) {
         'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
         'permission-denied'   => 'Tidak punya akses.',
@@ -402,7 +402,7 @@ class BookingViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (e, st) {
-      debugPrint('BookingViewModel Unexpected: $e\n$st');
+      if (kDebugMode) debugPrint('BookingViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal membuat booking.';
       isLoading = false;
       notifyListeners();
@@ -492,7 +492,7 @@ class BookingViewModel extends ChangeNotifier {
       _safeNotify();
       return false;
     } catch (e, st) {
-      debugPrint('editBooking error: $e\n$st');
+      if (kDebugMode) debugPrint('editBooking error: $e\n$st');
       errorMessage = 'Gagal menyimpan perubahan booking.';
       isLoading = false;
       _safeNotify();
@@ -607,7 +607,7 @@ class BookingViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e, st) {
-      debugPrint('extendBooking error: $e\n$st');
+      if (kDebugMode) debugPrint('extendBooking error: $e\n$st');
       errorMessage = 'Gagal memperpanjang booking.';
       isLoading = false;
       notifyListeners();

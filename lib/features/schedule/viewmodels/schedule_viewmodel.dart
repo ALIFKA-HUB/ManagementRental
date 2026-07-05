@@ -73,7 +73,7 @@ class ScheduleViewModel extends ChangeNotifier {
           notifyListeners();
         },
         onError: (e) {
-          debugPrint('Firestore Stream Error: $e');
+          if (kDebugMode) debugPrint('Firestore Stream Error: $e');
           if (e is FirebaseException) {
             errorMessage = switch (e.code) {
               'failed-precondition' => 'Konfigurasi database belum lengkap (index).',
@@ -88,7 +88,7 @@ class ScheduleViewModel extends ChangeNotifier {
         },
       );
     } catch (e, st) {
-      debugPrint('ScheduleViewModel Unexpected: $e\n$st');
+      if (kDebugMode) debugPrint('ScheduleViewModel Unexpected: $e\n$st');
       errorMessage = 'Gagal memuat jadwal.';
       isLoading = false;
       notifyListeners();
