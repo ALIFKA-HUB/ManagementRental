@@ -6,12 +6,14 @@ class AppEmptyState extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData icon;
+  final Widget? illustration;
 
   const AppEmptyState({
     super.key,
     required this.title,
     this.subtitle,
     this.icon = Icons.inbox_outlined,
+    this.illustration,
   });
 
   @override
@@ -27,12 +29,15 @@ class AppEmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(color: muted, shape: BoxShape.circle),
-              child: Icon(icon, size: 34, color: colorScheme.onSurfaceVariant),
-            ),
+            if (illustration != null) 
+              illustration!
+            else
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(color: muted, shape: BoxShape.circle),
+                child: Icon(icon, size: 34, color: colorScheme.onSurfaceVariant),
+              ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               title,

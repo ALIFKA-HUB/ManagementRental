@@ -58,7 +58,24 @@ class _CustomerHistoryPageState extends State<CustomerHistoryPage> {
             return AppEmptyState(
               title: 'Belum ada riwayat',
               subtitle: '${widget.customerName} belum punya booking.',
-              icon: Icons.history,
+              illustration: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.history, size: 40, color: AppColors.primary),
+                ),
+              ),
             );
           }
 
