@@ -25,14 +25,17 @@ class DriverListView extends StatelessWidget {
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: vm.drivers.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, i) {
-        final d = vm.drivers[i];
-        return _DriverCard(driver: d);
-      },
+    return RefreshIndicator(
+      onRefresh: vm.loadDrivers,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: vm.drivers.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        itemBuilder: (context, i) {
+          final d = vm.drivers[i];
+          return _DriverCard(driver: d);
+        },
+      ),
     );
   }
 }
