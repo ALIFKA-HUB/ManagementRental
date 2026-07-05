@@ -129,7 +129,7 @@ class _OperatorHomeContent extends StatelessWidget {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: vm.todayBookings.length,
-                            separatorBuilder: (_, _a) => const SizedBox(height: 8),
+                            separatorBuilder: (_, a) => const SizedBox(height: 8),
                             itemBuilder: (context, i) {
                               final b = vm.todayBookings[i];
                               return _TripCard(
@@ -151,7 +151,7 @@ class _OperatorHomeContent extends StatelessWidget {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: vm.upcomingBookings.length,
-                        separatorBuilder: (_, _a) => const SizedBox(height: 8),
+                        separatorBuilder: (_, a) => const SizedBox(height: 8),
                         itemBuilder: (context, i) {
                           final b = vm.upcomingBookings[i];
                           return _TripCard(
@@ -272,7 +272,6 @@ class _TripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isLast = !isHighlighted; // Simplification just to have some line logic, ideally we pass isLast from ListView
 
     return IntrinsicHeight(
       child: Row(

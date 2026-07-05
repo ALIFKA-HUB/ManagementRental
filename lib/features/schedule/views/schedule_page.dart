@@ -158,7 +158,7 @@ class _ScheduleContent extends StatelessWidget {
                         child: ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
                           itemCount: vm.selectedDayBookings.length,
-                          separatorBuilder: (_, _a) => const SizedBox(height: 8),
+                          separatorBuilder: (_, a) => const SizedBox(height: 8),
                           itemBuilder: (context, i) {
                             final b = vm.selectedDayBookings[i];
                             return _ScheduleBookingCard(booking: b, isAdmin: isAdmin);
@@ -252,7 +252,7 @@ class _ScheduleSkeleton extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
       itemCount: 4,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, _) => const AppSkeleton(height: 85, borderRadius: 14),
     );
   }

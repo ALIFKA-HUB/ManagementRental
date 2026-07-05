@@ -33,7 +33,7 @@ class VehicleListView extends StatelessWidget {
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: vm.vehicles.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        separatorBuilder: (_, _) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
           final v = vm.vehicles[i];
           return _VehicleCard(vehicle: v, isAdmin: isAdmin);
@@ -183,58 +183,6 @@ class _VehicleCard extends StatelessWidget {
           fontWeight: FontWeight.bold,
           fontFamily: 'monospace',
           fontSize: 12,
-        ),
-      ),
-    );
-  }
-}
-
-class _AddCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _AddCard({required this.title, required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
-      ),
-      elevation: 0,
-      color: AppColors.primary.withValues(alpha: 0.05),
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Icon(icon, color: AppColors.primary, size: 28),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

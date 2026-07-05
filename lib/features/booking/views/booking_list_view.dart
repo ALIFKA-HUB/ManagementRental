@@ -162,7 +162,7 @@ class _BookingListViewState extends State<BookingListView> {
                       child: ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
                         itemCount: vm.filteredBookings.length,
-                        separatorBuilder: (_, _a) => const SizedBox(height: 8),
+                        separatorBuilder: (_, a) => const SizedBox(height: 8),
                         itemBuilder: (context, i) {
                           final b = vm.filteredBookings[i];
                           return _BookingCard(booking: b, isAdmin: isAdmin);
@@ -195,7 +195,7 @@ class _BookingListViewState extends State<BookingListView> {
         controller: _historyScrollController,
         padding: const EdgeInsets.all(16),
         itemCount: itemCount,
-        separatorBuilder: (_, _a) => const SizedBox(height: 8),
+        separatorBuilder: (_, a) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
           if (i >= vm.historyBookings.length) {
             // Footer while the next page loads (or waiting for the scroll to

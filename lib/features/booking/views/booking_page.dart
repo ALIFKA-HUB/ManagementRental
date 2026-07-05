@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
 import 'booking_list_view.dart';
 import 'booking_form_page.dart';
-import 'package:rentalin/core/theme/app_colors.dart';
 
 class BookingPage extends StatelessWidget {
   const BookingPage({super.key});

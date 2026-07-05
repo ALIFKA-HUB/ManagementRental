@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/booking_model.dart';
 import '../models/booking_log_model.dart';
 import '../models/vehicle_model.dart';
-import '../models/driver_model.dart';
 
 /// Thrown when an atomic booking creation detects a resource conflict.
 class BookingConflictException implements Exception {

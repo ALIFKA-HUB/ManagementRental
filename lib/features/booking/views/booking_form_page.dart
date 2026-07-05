@@ -377,7 +377,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   // admin sees why an option is unavailable without submitting.
                   DropdownButtonFormField<VehicleModel>(
                     focusNode: _vehicleFocus,
-                    value: _selectedVehicle,
+                    initialValue: _selectedVehicle,
                     isExpanded: true,
                     hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Kendaraan'),
                     decoration: InputDecoration(
@@ -398,7 +398,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                   DropdownButtonFormField<DriverModel>(
                     focusNode: _driverFocus,
-                    value: _selectedDriver,
+                    initialValue: _selectedDriver,
                     isExpanded: true,
                     hint: Text((_startDateTime == null || _endDateTime == null) ? 'Pilih jadwal dahulu' : 'Pilih Supir'),
                     decoration: InputDecoration(
@@ -437,7 +437,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   const SizedBox(height: 12),
 
                   DropdownButtonFormField<PaymentStatus>(
-                    value: _paymentStatus,
+                    initialValue: _paymentStatus,
                     decoration: InputDecoration(
                       labelText: 'Status Pembayaran',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
