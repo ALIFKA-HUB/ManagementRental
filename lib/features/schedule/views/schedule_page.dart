@@ -153,14 +153,17 @@ class _ScheduleContent extends StatelessWidget {
                         title: 'Tidak ada jadwal',
                         icon: Icons.event_available,
                       )
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
-                        itemCount: vm.selectedDayBookings.length,
-                        separatorBuilder: (_, _a) => const SizedBox(height: 8),
-                        itemBuilder: (context, i) {
-                          final b = vm.selectedDayBookings[i];
-                          return _ScheduleBookingCard(booking: b, isAdmin: isAdmin);
-                        },
+                    : RefreshIndicator(
+                        onRefresh: () => vm.loadMonth(vm.focusedDay),
+                        child: ListView.separated(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
+                          itemCount: vm.selectedDayBookings.length,
+                          separatorBuilder: (_, _a) => const SizedBox(height: 8),
+                          itemBuilder: (context, i) {
+                            final b = vm.selectedDayBookings[i];
+                            return _ScheduleBookingCard(booking: b, isAdmin: isAdmin);
+                          },
+                        ),
                       ),
           ),
         ],
