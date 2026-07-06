@@ -502,29 +502,53 @@ class _FormSkeleton extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: const [
+        // Data Penyewa
         AppSkeleton(height: 24, width: 120),
         SizedBox(height: 12),
-        AppSkeleton(height: 56),
+        AppSkeleton(height: 56, borderRadius: 12), // Nama
         SizedBox(height: 12),
-        AppSkeleton(height: 56),
+        AppSkeleton(height: 56, borderRadius: 12), // No HP
+        
         SizedBox(height: 32),
+        
+        // Jadwal
         AppSkeleton(height: 24, width: 100),
         SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: AppSkeleton(height: 56)),
+            Expanded(child: AppSkeleton(height: 56, borderRadius: 12)),
             SizedBox(width: 10),
-            Expanded(child: AppSkeleton(height: 56)),
+            Expanded(child: AppSkeleton(height: 56, borderRadius: 12)),
           ],
         ),
+
         SizedBox(height: 32),
+        
+        // Kendaraan & Supir
         AppSkeleton(height: 24, width: 150),
         SizedBox(height: 12),
-        AppSkeleton(height: 56),
+        AppSkeleton(height: 56, borderRadius: 12), // Vehicle
         SizedBox(height: 12),
-        AppSkeleton(height: 56),
-        SizedBox(height: 48),
-        AppSkeleton(height: 56),
+        AppSkeleton(height: 56, borderRadius: 12), // Driver
+
+        SizedBox(height: 32),
+        
+        // Rute
+        AppSkeleton(height: 56, borderRadius: 12),
+
+        SizedBox(height: 32),
+
+        // Harga & Pembayaran
+        AppSkeleton(height: 24, width: 160),
+        SizedBox(height: 12),
+        AppSkeleton(height: 56, borderRadius: 12), // Harga
+        SizedBox(height: 12),
+        AppSkeleton(height: 56, borderRadius: 12), // Pembayaran
+        SizedBox(height: 12),
+        AppSkeleton(height: 100, borderRadius: 12), // Catatan
+
+        SizedBox(height: 28),
+        AppSkeleton(height: 56, borderRadius: 14), // Button
       ],
     );
   }
