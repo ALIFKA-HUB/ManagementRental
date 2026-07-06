@@ -12,6 +12,7 @@ import 'package:rentalin/features/booking/views/booking_form_page.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
 import 'package:rentalin/features/schedule/viewmodels/schedule_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
+import 'package:rentalin/core/navigation/app_page_route.dart';
 
 class SchedulePage extends StatelessWidget {
   const SchedulePage({super.key});
@@ -49,7 +50,7 @@ class _ScheduleContent extends StatelessWidget {
               tooltip: 'Buat Booking',
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(
+                AppPageRoute(
                   builder: (_) => ChangeNotifierProvider(
                     create: (_) => BookingViewModel()..loadActiveBookings(),
                     child: const BookingFormPage(),

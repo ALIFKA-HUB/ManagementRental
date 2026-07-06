@@ -7,6 +7,7 @@ import 'package:rentalin/features/armada/views/vehicle_form_page.dart';
 import 'package:rentalin/features/armada/views/driver_form_page.dart';
 import 'vehicle_list_view.dart';
 import 'driver_list_view.dart';
+import 'package:rentalin/core/navigation/app_page_route.dart';
 
 class ArmadaPage extends StatelessWidget {
   const ArmadaPage({super.key});
@@ -36,7 +37,7 @@ class ArmadaPage extends StatelessWidget {
                       if (tabIndex == 0) {
                         Navigator.push(
                           ctx,
-                          MaterialPageRoute(
+                          AppPageRoute(
                             builder: (_) => ChangeNotifierProvider.value(
                               value: ctx.read<VehicleViewModel>(),
                               child: const VehicleFormPage(),
@@ -46,7 +47,7 @@ class ArmadaPage extends StatelessWidget {
                       } else {
                         Navigator.push(
                           ctx,
-                          MaterialPageRoute(
+                          AppPageRoute(
                             builder: (_) => ChangeNotifierProvider.value(
                               value: ctx.read<DriverViewModel>(),
                               child: const DriverFormPage(),

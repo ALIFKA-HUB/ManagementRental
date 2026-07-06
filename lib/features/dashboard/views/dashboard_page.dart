@@ -14,6 +14,7 @@ import 'package:rentalin/features/booking/views/booking_form_page.dart';
 import 'package:rentalin/features/booking/views/booking_detail_sheet.dart';
 import 'package:rentalin/features/dashboard/viewmodels/dashboard_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
+import 'package:rentalin/core/navigation/app_page_route.dart';
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onGoToArmada;
@@ -158,7 +159,7 @@ class _DashboardContent extends StatelessWidget {
                                     final bookingVm = BookingViewModel()..loadActiveBookings();
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(
+                                      AppPageRoute(
                                         builder: (_) => ChangeNotifierProvider.value(
                                           value: bookingVm,
                                           child: const BookingFormPage(),
@@ -177,7 +178,7 @@ class _DashboardContent extends StatelessWidget {
                                   color: AppColors.secondary,
                                   onTap: onGoToArmada ?? () => Navigator.push(
                                     context,
-                                    MaterialPageRoute(builder: (_) => const ArmadaPage()),
+                                    AppPageRoute(builder: (_) => const ArmadaPage()),
                                   ),
                                 ),
                               ),
@@ -196,7 +197,7 @@ class _DashboardContent extends StatelessWidget {
                                 final bookingVm = BookingViewModel()..loadActiveBookings();
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
+                                  AppPageRoute(
                                     builder: (_) => ChangeNotifierProvider.value(
                                       value: bookingVm,
                                       child: const BookingFormPage(),
@@ -213,7 +214,7 @@ class _DashboardContent extends StatelessWidget {
                               color: AppColors.secondary,
                               onTap: onGoToArmada ?? () => Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const ArmadaPage()),
+                                AppPageRoute(builder: (_) => const ArmadaPage()),
                               ),
                             ),
                           ],

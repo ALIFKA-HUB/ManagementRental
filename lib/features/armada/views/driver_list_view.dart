@@ -7,6 +7,7 @@ import 'package:rentalin/features/armada/viewmodels/driver_viewmodel.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'driver_form_page.dart';
+import 'package:rentalin/core/navigation/app_page_route.dart';
 
 class DriverListView extends StatelessWidget {
   const DriverListView({super.key});
@@ -101,7 +102,7 @@ class _DriverCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(
+            AppPageRoute(
               builder: (_) => ChangeNotifierProvider.value(
                 value: vm,
                 child: DriverFormPage(driver: driver),
@@ -161,7 +162,7 @@ class _DriverCard extends StatelessWidget {
                           if (val == 'edit') {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
+                              AppPageRoute(
                                 builder: (_) => ChangeNotifierProvider.value(
                                   value: vm,
                                   child: DriverFormPage(driver: driver),
