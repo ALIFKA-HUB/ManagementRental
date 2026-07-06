@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:rentalin/core/theme/app_colors.dart';
+import 'package:rentalin/core/utils/app_time.dart';
+import 'package:rentalin/core/widgets/app_button.dart';
 import 'package:rentalin/core/widgets/app_chip.dart';
+import 'package:rentalin/core/widgets/processing_overlay.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
@@ -288,6 +291,7 @@ class BookingDetailSheet extends StatelessWidget {
                 Navigator.pop(ctx);
                 // M-4: strip non-digits to fix Indonesian "10.000" -> 10000 parsing
                 final extra = double.tryParse(extraCtrl.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+                ProcessingOverlay.show(context, message: 'Memproses perpanjangan...');
                 final ok = await vm.extendBooking(
                   bookingId: booking.bookingId,
                   newEnd: newEnd!,
@@ -295,6 +299,7 @@ class BookingDetailSheet extends StatelessWidget {
                   uid: auth.currentUser!.userId,
                   displayName: auth.currentUser!.displayName,
                 );
+                ProcessingOverlay.hide();
                 if (!ok && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(vm.errorMessage ?? 'Gagal'), backgroundColor: AppColors.error),
