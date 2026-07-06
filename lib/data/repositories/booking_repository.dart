@@ -106,6 +106,16 @@ class BookingRepository {
         .toList();
   }
 
+  /// B-02: fetch all bookings within an arbitrary date range (for income page).
+  Future<List<BookingModel>> getBookingsInRange(
+      DateTime from, DateTime to) async {
+    final snap = await _col
+        .where('startDateTime', isGreaterThanOrEqualTo: Timestamp.fromDate(from))
+        .where('startDateTime', isLessThan: Timestamp.fromDate(to))
+        .get();
+    return snap.docs.map(BookingModel.fromFirestore).toList();
+  }
+
   Stream<List<BookingModel>> streamBookingsForMonth(int year, int month) {
     final start = DateTime(year, month, 1);
     final end = DateTime(year, month + 1, 1);
