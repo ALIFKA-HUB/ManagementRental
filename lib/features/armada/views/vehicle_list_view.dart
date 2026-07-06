@@ -8,7 +8,6 @@ import 'package:rentalin/features/armada/viewmodels/vehicle_viewmodel.dart';
 import 'package:rentalin/features/armada/views/vehicle_form_page.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
-import 'vehicle_form_page.dart';
 
 class VehicleListView extends StatelessWidget {
   const VehicleListView({super.key});
@@ -174,7 +173,7 @@ class _VehicleCard extends StatelessWidget {
                           ),
                         );
                         if (confirm == true && context.mounted) {
-                          vm.deleteVehicle(vehicle.id);
+                          vm.deleteVehicle(vehicle.vehicleId);
                         }
                       }
                     },
