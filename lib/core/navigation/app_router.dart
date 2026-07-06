@@ -6,11 +6,39 @@ import 'package:rentalin/features/auth/views/login_page.dart';
 import 'admin_shell.dart';
 import 'operator_shell.dart';
 
-class AppRouter extends StatelessWidget {
+import 'package:rentalin/features/splash/views/splash_page.dart';
+
+class AppRouter extends StatefulWidget {
   const AppRouter({super.key});
 
   @override
+  State<AppRouter> createState() => _AppRouterState();
+}
+
+class _AppRouterState extends State<AppRouter> {
+  bool _showSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _startSplashTimer();
+  }
+
+  void _startSplashTimer() async {
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      setState(() {
+        _showSplash = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_showSplash) {
+      return const SplashPage();
+    }
+
     final authVM = context.watch<AuthViewModel>();
 
     return StreamBuilder<User?>(

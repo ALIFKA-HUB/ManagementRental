@@ -91,6 +91,7 @@ class _DashboardContent extends StatelessWidget {
               }
             },
           ),
+          ),
           const SizedBox(width: 8),
         ],
       ),
