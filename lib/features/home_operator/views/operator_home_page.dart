@@ -89,6 +89,7 @@ class _OperatorHomeContent extends StatelessWidget {
               }
             },
           ),
+          ),
           const SizedBox(width: 8),
         ],
       ),
