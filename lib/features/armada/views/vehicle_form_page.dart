@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:rentalin/core/theme/app_colors.dart';
 import 'package:rentalin/core/widgets/app_button.dart';
 import 'package:rentalin/core/widgets/app_input.dart';
+import 'package:rentalin/core/utils/plate_number_formatter.dart';
 import 'package:rentalin/data/models/vehicle_model.dart';
 import 'package:rentalin/features/armada/viewmodels/vehicle_viewmodel.dart';
 
@@ -43,10 +44,21 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
     super.dispose();
   }
 
+  bool _isValidPlate(String plate) {
+    return RegExp(r'^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{2,3}$').hasMatch(plate);
+  }
+
   Future<void> _onSave() async {
     if (_nameCtrl.text.isEmpty || _plateCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Nama dan plat nomor wajib diisi.')),
+      );
+      return;
+    }
+
+    if (!_isValidPlate(_plateCtrl.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Format plat nomor tidak valid (contoh: B 1234 XY)')),
       );
       return;
     }
@@ -109,7 +121,13 @@ class _VehicleFormPageState extends State<VehicleFormPage> {
             AppInput(label: 'Nama Kendaraan', controller: _nameCtrl, hint: 'Toyota Hiace'),
             const SizedBox(height: 16),
 
-            AppInput(label: 'Plat Nomor', controller: _plateCtrl, hint: 'B 1234 XY'),
+            AppInput(
+              label: 'Plat Nomor', 
+              controller: _plateCtrl, 
+              hint: 'B 1234 XY',
+              helperText: 'Format: B 1234 XXX',
+              inputFormatters: [PlateNumberFormatter()],
+            ),
             const SizedBox(height: 16),
 
             // Kategori dropdown
