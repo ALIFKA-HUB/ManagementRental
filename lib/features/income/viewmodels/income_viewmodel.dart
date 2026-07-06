@@ -77,12 +77,9 @@ class IncomeViewModel extends ChangeNotifier {
 
       if (_isDisposed) return;
 
-      // Filter hanya yang sudah paid dan status completed
+      // Filter hanya yang masuk kriteria revenue
       paidBookings = bookings
-          .where((b) =>
-              b.bookingStatus == BookingStatus.completed &&
-              (b.paymentStatus == PaymentStatus.paid ||
-                  b.paymentStatus == PaymentStatus.dp))
+          .where((b) => b.isRevenueGenerating)
           .toList()
         ..sort((a, b) => b.startDateTime.compareTo(a.startDateTime));
 

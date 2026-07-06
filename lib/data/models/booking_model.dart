@@ -56,6 +56,12 @@ class BookingModel {
   // Status
   final BookingStatus bookingStatus;
 
+  /// Whether this booking should be counted towards revenue.
+  /// Must be completed and at least partially paid (dp or paid).
+  bool get isRevenueGenerating =>
+      bookingStatus == BookingStatus.completed &&
+      (paymentStatus == PaymentStatus.paid || paymentStatus == PaymentStatus.dp);
+
   /// M-8: Compute effective status from current time — no scheduler needed.
   /// upcoming -> active when startDateTime <= now < endDateTime.
   BookingStatus get effectiveStatus {

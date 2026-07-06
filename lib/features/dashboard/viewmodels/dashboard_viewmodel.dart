@@ -79,9 +79,9 @@ class DashboardViewModel extends ChangeNotifier {
       final monthly = results[3] as List<BookingModel>;
       final todayBookings = results[4] as List<BookingModel>;
 
-      // Revenue: sum dari booking completed bulan ini
-      final monthCompleted = monthly.where((b) => b.bookingStatus == BookingStatus.completed);
-      final todayCompleted = todayBookings.where((b) => b.bookingStatus == BookingStatus.completed);
+      // Revenue: sum dari booking completed dan paid/dp
+      final monthCompleted = monthly.where((b) => b.isRevenueGenerating);
+      final todayCompleted = todayBookings.where((b) => b.isRevenueGenerating);
 
       // Muted text light
       final pending = active.where((b) =>
