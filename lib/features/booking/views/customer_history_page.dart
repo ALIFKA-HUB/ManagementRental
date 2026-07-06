@@ -47,9 +47,22 @@ class _CustomerHistoryPageState extends State<CustomerHistoryPage> {
             return const _HistorySkeleton();
           }
           if (snapshot.hasError) {
-            return const AppEmptyState(
+            final err = snapshot.error;
+            String subtitle = 'Periksa koneksi atau konfigurasi index database.';
+            if (err != null) {
+              // Show specific Firebase error code for easier debugging
+              final errStr = err.toString();
+              if (errStr.contains('failed-precondition') || errStr.contains('index')) {
+                subtitle = 'Index database belum dibuat. Hubungi administrator.';
+              } else if (errStr.contains('permission-denied')) {
+                subtitle = 'Tidak punya akses ke data ini.';
+              } else if (errStr.contains('unavailable')) {
+                subtitle = 'Tidak ada koneksi internet.';
+              }
+            }
+            return AppEmptyState(
               title: 'Gagal memuat riwayat',
-              subtitle: 'Periksa koneksi atau konfigurasi index database.',
+              subtitle: subtitle,
               icon: Icons.error_outline,
             );
           }
