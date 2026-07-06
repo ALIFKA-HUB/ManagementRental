@@ -197,11 +197,22 @@ class BookingRepository {
   /// [startAfter] is the raw [DocumentSnapshot] of the last item already shown.
   Future<BookingPage> getCompletedBookings({
     DocumentSnapshot? startAfter,
+    DateTime? startDate,
+    DateTime? endDate,
     int limit = 20,
   }) async {
     // All bookings, sorted by most recent activity — no status filter.
     // orderBy + limit pushed to Firestore so reads stay bounded (M-6).
-    var query = _col.orderBy('updatedAt', descending: true).limit(limit);
+    var query = _col.orderBy('updatedAt', descending: true);
+    
+    if (startDate != null) {
+      query = query.where('updatedAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
+    }
+    if (endDate != null) {
+      query = query.where('updatedAt', isLessThanOrEqualTo: Timestamp.fromDate(endDate));
+    }
+    
+    query = query.limit(limit);
     if (startAfter != null) query = query.startAfterDocument(startAfter);
     final snap = await query.get();
 
