@@ -11,6 +11,8 @@ import 'package:rentalin/data/repositories/customer_repository.dart';
 import 'package:rentalin/data/repositories/driver_repository.dart';
 import 'package:rentalin/data/repositories/settings_repository.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
+import 'package:rentalin/core/utils/app_error.dart';
+import 'package:rentalin/core/utils/firebase_extensions.dart';
 
 enum BookingFilter { all, today, thisWeek }
 enum HistoryFilter { all, today, thisWeek, thisMonth }
@@ -75,7 +77,7 @@ class BookingViewModel extends ChangeNotifier {
     _safeNotify();
     try {
       await _loadBuffer();
-      await _bookingRepo.syncActiveStatuses();
+      await _bookingRepo.syncActiveStatuses().withFirebaseTimeout();
       
       if (_isDisposed) return;
 
@@ -154,7 +156,7 @@ class BookingViewModel extends ChangeNotifier {
         limit: _historyPageSize,
         startDate: start,
         endDate: end,
-      );
+      ).withFirebaseTimeout();
       historyBookings = page.items;
       _historyCursor = page.lastDoc;
       historyHasMore = page.hasMore;
@@ -186,7 +188,7 @@ class BookingViewModel extends ChangeNotifier {
         limit: _historyPageSize,
         startDate: start,
         endDate: end,
-      );
+      ).withFirebaseTimeout();
       historyBookings = [...historyBookings, ...page.items];
       _historyCursor = page.lastDoc ?? _historyCursor;
       historyHasMore = page.hasMore;
@@ -219,10 +221,10 @@ class BookingViewModel extends ChangeNotifier {
       // driver — not just those whose status flag is currently ready/standby.
       // A vehicle that is out today, or already booked for another date, can
       // still be booked for a non-overlapping range.
-      final allVehicles = await _vehicleRepo.getAll();
+      final allVehicles = await _vehicleRepo.getAll().withFirebaseTimeout();
       readyVehicles =
           allVehicles.where((v) => v.status != VehicleStatus.maintenance).toList();
-      standbyDrivers = await _driverRepo.getAll();
+      standbyDrivers = await _driverRepo.getAll().withFirebaseTimeout();
       await _loadBuffer(); // TASK-03: refresh turnaround buffer
       notifyListeners();
     } catch (_) {}
@@ -395,7 +397,7 @@ class BookingViewModel extends ChangeNotifier {
         start: startDateTime,
         end: endDateTime,
         bufferMinutes: bufferMinutes,
-      );
+      ).withFirebaseTimeout();
       if (conflict) {
         errorMessage = bufferMinutes > 0
             ? 'Jadwal bentrok atau terlalu dekat (jeda min. $bufferMinutes menit) dengan booking lain.'
@@ -435,8 +437,8 @@ class BookingViewModel extends ChangeNotifier {
         timestamp: now,
       );
 
-      await _bookingRepo.addWithLog(booking, log);
-      await _customerRepo.upsertCustomer(customerName, customerPhone);
+      await _bookingRepo.addWithLog(booking, log).withFirebaseTimeout();
+      await _customerRepo.upsertCustomer(customerName, customerPhone).withFirebaseTimeout();
       isLoading = false;
       notifyListeners();
       return true;
@@ -495,7 +497,7 @@ class BookingViewModel extends ChangeNotifier {
         end: endDateTime,
         excludeBookingId: existingBooking.bookingId,
         bufferMinutes: bufferMinutes,
-      );
+      ).withFirebaseTimeout();
       if (conflict) {
         errorMessage = await _settingsRepo.getRentalPolicy().then((p) => p.bufferMinutes > 0)
             ? 'Jadwal bentrok atau terlalu dekat (jeda min. $bufferMinutes menit) dengan booking lain.'
@@ -535,7 +537,7 @@ class BookingViewModel extends ChangeNotifier {
         timestamp: now,
       );
 
-      await _bookingRepo.updateBooking(updated: updated, log: log);
+      await _bookingRepo.updateBooking(updated: updated, log: log).withFirebaseTimeout();
       // TASK-09: the active-bookings stream reflects the update automatically;
       // no manual reload needed (which would re-subscribe the stream).
       isLoading = false;
@@ -567,12 +569,16 @@ class BookingViewModel extends ChangeNotifier {
         performedByName: displayName,
         timestamp: DateTime.now(),
       );
-      await _bookingRepo.cancelBooking(bookingId: bookingId, log: log);
+      await _bookingRepo.cancelBooking(bookingId: bookingId, log: log).withFirebaseTimeout();
       isLoading = false;
       notifyListeners();
       return true;
-    } catch (_) {
-      errorMessage = 'Gagal membatalkan booking.';
+    } catch (e) {
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal membatalkan booking.';
+      }
       isLoading = false;
       notifyListeners();
       return false;
@@ -594,12 +600,16 @@ class BookingViewModel extends ChangeNotifier {
       await _bookingRepo.completeBooking(
         bookingId: bookingId,
         log: log,
-      );
+      ).withFirebaseTimeout();
       isLoading = false;
       notifyListeners();
       return true;
-    } catch (_) {
-      errorMessage = 'Gagal menyelesaikan booking.';
+    } catch (e) {
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal menyelesaikan booking.';
+      }
       isLoading = false;
       notifyListeners();
       return false;
@@ -637,7 +647,7 @@ class BookingViewModel extends ChangeNotifier {
         end: newEnd,
         excludeBookingId: bookingId,
         bufferMinutes: bufferMinutes,
-      );
+      ).withFirebaseTimeout();
       if (conflict) {
         errorMessage = 'Perpanjangan bentrok dengan booking lain.';
         isLoading = false;
@@ -657,7 +667,7 @@ class BookingViewModel extends ChangeNotifier {
         newEnd: newEnd,
         extraPrice: extraPrice,
         log: log,
-      );
+      ).withFirebaseTimeout();
       isLoading = false;
       notifyListeners();
       return true;
@@ -691,12 +701,16 @@ class BookingViewModel extends ChangeNotifier {
         bookingId: bookingId,
         newStatus: newStatus,
         log: log,
-      );
+      ).withFirebaseTimeout();
       isLoading = false;
       notifyListeners();
       return true;
-    } catch (_) {
-      errorMessage = 'Gagal mengubah status pembayaran.';
+    } catch (e) {
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal mengubah status pembayaran.';
+      }
       isLoading = false;
       notifyListeners();
       return false;

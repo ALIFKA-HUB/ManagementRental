@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:rentalin/data/models/user_model.dart';
 import 'package:rentalin/data/repositories/auth_repository.dart';
+import 'package:rentalin/core/utils/app_error.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthRepository _repo = AuthRepository();
@@ -37,8 +38,12 @@ class AuthViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
       return false;
-    } catch (_) {
-      errorMessage = 'Terjadi kesalahan. Coba lagi.';
+    } catch (e) {
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Terjadi kesalahan. Coba lagi.';
+      }
       isLoading = false;
       notifyListeners();
       return false;
