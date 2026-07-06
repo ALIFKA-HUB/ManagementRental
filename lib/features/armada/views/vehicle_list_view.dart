@@ -5,6 +5,7 @@ import 'package:rentalin/core/widgets/app_chip.dart';
 import 'package:rentalin/core/widgets/app_empty_state.dart';
 import 'package:rentalin/data/models/vehicle_model.dart';
 import 'package:rentalin/features/armada/viewmodels/vehicle_viewmodel.dart';
+import 'package:rentalin/features/armada/views/vehicle_form_page.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'vehicle_form_page.dart';
@@ -143,13 +144,50 @@ class _VehicleCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (isAdmin && vehicle.status != VehicleStatus.inUse)
+                if (isAdmin)
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert),
-                    onSelected: (val) {
-                      if (val == 'status') vm.toggleStatus(vehicle);
+                    onSelected: (val) async {
+                      if (val == 'status') {
+                        vm.toggleStatus(vehicle);
+                      } else if (val == 'edit') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => VehicleFormPage(vehicle: vehicle),
+                          ),
+                        );
+                      } else if (val == 'delete') {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Hapus Kendaraan'),
+                            content: Text('Yakin ingin menghapus ${vehicle.name}?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white),
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Hapus'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true && context.mounted) {
+                          vm.deleteVehicle(vehicle.id);
+                        }
+                      }
                     },
                     itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Text('Edit'),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        enabled: vehicle.status != VehicleStatus.inUse,
+                        child: const Text('Hapus'),
+                      ),
                       PopupMenuItem(
                         value: 'status',
                         child: Text(vehicle.status == VehicleStatus.ready ? 'Set Bengkel' : 'Set Ready'),
