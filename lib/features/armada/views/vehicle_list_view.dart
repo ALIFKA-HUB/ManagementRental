@@ -149,7 +149,12 @@ class _VehicleCard extends StatelessWidget {
                     icon: const Icon(Icons.more_vert),
                     onSelected: (val) async {
                       if (val == 'status') {
-                        vm.toggleStatus(vehicle);
+                        final ok = await vm.toggleStatus(vehicle);
+                        if (!ok && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(vm.errorMessage ?? 'Gagal mengubah status kendaraan.'), backgroundColor: AppColors.error),
+                          );
+                        }
                       } else if (val == 'edit') {
                         Navigator.push(
                           context,
@@ -177,7 +182,12 @@ class _VehicleCard extends StatelessWidget {
                           ),
                         );
                         if (confirm == true && context.mounted) {
-                          vm.deleteVehicle(vehicle.vehicleId);
+                          final ok = await vm.deleteVehicle(vehicle.vehicleId);
+                          if (!ok && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(vm.errorMessage ?? 'Gagal menghapus kendaraan.'), backgroundColor: AppColors.error),
+                            );
+                          }
                         }
                       }
                     },

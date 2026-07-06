@@ -185,8 +185,13 @@ class _DriverCard extends StatelessWidget {
                                 ],
                               ),
                             );
-                            if (confirm == true && context.mounted) {
-                              vm.deleteDriver(driver.driverId);
+                            if (confirm == true) {
+                              final ok = await vm.deleteDriver(driver.driverId);
+                              if (!ok && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(vm.errorMessage ?? 'Gagal menghapus supir.'), backgroundColor: AppColors.error),
+                                );
+                              }
                             }
                           }
                         },

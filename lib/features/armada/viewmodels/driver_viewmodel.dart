@@ -4,6 +4,7 @@ import 'package:rentalin/data/repositories/auth_repository.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
 import 'package:rentalin/data/repositories/driver_repository.dart';
 import 'package:rentalin/core/utils/app_error.dart';
+import 'package:rentalin/core/utils/connectivity_service.dart';
 import 'package:rentalin/core/utils/firebase_extensions.dart';
 
 class DriverViewModel extends ChangeNotifier {
@@ -47,6 +48,9 @@ class DriverViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final codeExists = await _driverRepo.checkCodeIdExists(codeId).withFirebaseTimeout();
       if (codeExists) {
         errorMessage = 'Kode ID supir sudah digunakan.';
@@ -89,6 +93,9 @@ class DriverViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final codeExists = await _driverRepo.checkCodeIdExists(
         codeId,
         excludeId: driver.driverId,
@@ -121,6 +128,9 @@ class DriverViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final active = await _bookingRepo.getActiveBookings().withFirebaseTimeout();
       if (active.any((b) => b.driverId == driverId)) {
         errorMessage = 'Supir masih memiliki booking aktif.';
