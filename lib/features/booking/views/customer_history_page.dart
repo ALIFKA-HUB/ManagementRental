@@ -110,7 +110,7 @@ class _CustomerHistoryPageState extends State<CustomerHistoryPage> {
                     return Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
