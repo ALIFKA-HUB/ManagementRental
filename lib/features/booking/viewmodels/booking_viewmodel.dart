@@ -13,6 +13,7 @@ import 'package:rentalin/data/repositories/settings_repository.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
 
 enum BookingFilter { all, today, thisWeek }
+enum HistoryFilter { all, today, thisWeek, thisMonth }
 
 class BookingViewModel extends ChangeNotifier {
   final BookingRepository _bookingRepo = BookingRepository();
@@ -31,6 +32,7 @@ class BookingViewModel extends ChangeNotifier {
   int bufferMinutes = 0;
 
   BookingFilter currentFilter = BookingFilter.all;
+  HistoryFilter currentHistoryFilter = HistoryFilter.all;
   bool isLoading = false;
   bool isLoadingHistory = false;
   String? errorMessage;
@@ -44,6 +46,9 @@ class BookingViewModel extends ChangeNotifier {
   /// TASK-11: free-text search (customer name / plate / driver) over the
   /// already-loaded active bookings — no extra Firestore reads.
   String searchQuery = '';
+  
+  /// Search query for history bookings.
+  String historySearchQuery = '';
 
   /// Best-effort refresh of the configurable turnaround buffer.
   Future<void> _loadBuffer() async {
@@ -106,6 +111,36 @@ class BookingViewModel extends ChangeNotifier {
     }
   }
 
+  void setHistorySearchQuery(String query) {
+    if (historySearchQuery == query) return;
+    historySearchQuery = query;
+    notifyListeners();
+  }
+
+  void setHistoryFilter(HistoryFilter filter) {
+    if (currentHistoryFilter == filter) return;
+    currentHistoryFilter = filter;
+    loadHistoryBookings();
+  }
+
+  (DateTime?, DateTime?) _getHistoryDateRange() {
+    final now = DateTime.now();
+    switch (currentHistoryFilter) {
+      case HistoryFilter.all:
+        return (null, null);
+      case HistoryFilter.today:
+        return (AppTime.startOfDay(now), AppTime.endOfDay(now));
+      case HistoryFilter.thisWeek:
+        final start = AppTime.startOfDay(now.subtract(Duration(days: now.weekday - 1)));
+        final end = AppTime.endOfDay(start.add(const Duration(days: 6)));
+        return (start, end);
+      case HistoryFilter.thisMonth:
+        final start = DateTime(now.year, now.month, 1);
+        final end = AppTime.endOfDay(DateTime(now.year, now.month + 1, 0));
+        return (start, end);
+    }
+  }
+
   /// TASK-10: (re)load the first page of history. Resets the cursor so this
   /// doubles as pull-to-refresh.
   Future<void> loadHistoryBookings() async {
@@ -114,7 +149,12 @@ class BookingViewModel extends ChangeNotifier {
     historyHasMore = true;
     notifyListeners();
     try {
-      final page = await _bookingRepo.getCompletedBookings(limit: _historyPageSize);
+      final (start, end) = _getHistoryDateRange();
+      final page = await _bookingRepo.getCompletedBookings(
+        limit: _historyPageSize,
+        startDate: start,
+        endDate: end,
+      );
       historyBookings = page.items;
       _historyCursor = page.lastDoc;
       historyHasMore = page.hasMore;
@@ -140,9 +180,12 @@ class BookingViewModel extends ChangeNotifier {
     isLoadingMoreHistory = true;
     notifyListeners();
     try {
+      final (start, end) = _getHistoryDateRange();
       final page = await _bookingRepo.getCompletedBookings(
         startAfter: _historyCursor,
         limit: _historyPageSize,
+        startDate: start,
+        endDate: end,
       );
       historyBookings = [...historyBookings, ...page.items];
       _historyCursor = page.lastDoc ?? _historyCursor;
@@ -155,6 +198,18 @@ class BookingViewModel extends ChangeNotifier {
     }
     isLoadingMoreHistory = false;
     notifyListeners();
+  }
+
+  /// History bookings filtered by search query
+  List<BookingModel> get filteredHistoryBookings {
+    if (historySearchQuery.trim().isEmpty) return historyBookings;
+    final q = historySearchQuery.trim().toLowerCase();
+    return historyBookings.where((b) {
+      final matchCust = b.customerName.toLowerCase().contains(q);
+      final matchVehicle = b.vehicleName.toLowerCase().contains(q);
+      final matchPlate = b.vehiclePlate.toLowerCase().contains(q);
+      return matchCust || matchVehicle || matchPlate;
+    }).toList();
   }
 
   Future<void> loadFormData() async {

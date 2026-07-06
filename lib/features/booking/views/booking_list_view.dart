@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:rentalin/core/theme/app_colors.dart';
 import 'package:rentalin/core/widgets/app_chip.dart';
 import 'package:rentalin/core/widgets/app_empty_state.dart';
+import 'package:rentalin/core/widgets/app_input.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
@@ -180,10 +181,77 @@ class _BookingListViewState extends State<BookingListView> {
   // ── Tab Riwayat ────────────────────────────────────────────────────────────
 
   Widget _buildHistoryTab(BookingViewModel vm, bool isAdmin) {
-    if (vm.isLoadingHistory && vm.historyBookings.isEmpty) {
+    const labels = {
+      HistoryFilter.all: 'Semua',
+      HistoryFilter.today: 'Hari Ini',
+      HistoryFilter.thisWeek: 'Minggu Ini',
+      HistoryFilter.thisMonth: 'Bulan Ini',
+    };
+
+    return Column(
+      children: [
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: AppInput(
+            label: 'Cari Riwayat',
+            hint: 'Nama penyewa, mobil, plat',
+            prefixIcon: const Icon(Icons.search),
+            onChanged: (val) => vm.setHistorySearchQuery(val),
+          ),
+        ),
+        // Filter history
+        SizedBox(
+          height: 56,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            children: HistoryFilter.values.map((f) {
+              final isSelected = vm.currentHistoryFilter == f;
+              final theme = Theme.of(context);
+              final isDark = theme.brightness == Brightness.dark;
+              
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Semantics(
+                  label: 'history_filter_${f.name}',
+                  child: FilterChip(
+                    showCheckmark: false,
+                    label: Text(labels[f]!),
+                    labelStyle: TextStyle(
+                      color: isSelected 
+                          ? Colors.white 
+                          : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight),
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    selected: isSelected,
+                    selectedColor: AppColors.primary,
+                    backgroundColor: isDark ? AppColors.surfaceMutedDark : AppColors.surfaceMutedLight,
+                    side: BorderSide(
+                      color: isSelected 
+                          ? AppColors.primary 
+                          : (isDark ? AppColors.borderDark : AppColors.borderLight),
+                    ),
+                    onSelected: (_) => vm.setHistoryFilter(f),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+
+        Expanded(
+          child: _buildHistoryContent(vm, isAdmin),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHistoryContent(BookingViewModel vm, bool isAdmin) {
+    if (vm.isLoadingHistory && vm.filteredHistoryBookings.isEmpty) {
       return const AppListSkeleton(height: 140);
     }
-    if (vm.historyBookings.isEmpty) {
+    if (vm.filteredHistoryBookings.isEmpty) {
       return const AppEmptyState(
         title: 'Belum ada riwayat booking',
         subtitle: 'Booking yang selesai atau dibatalkan akan muncul di sini',
@@ -191,7 +259,7 @@ class _BookingListViewState extends State<BookingListView> {
       );
     }
     // TASK-10: extra trailing slot for the "load more" spinner / end indicator.
-    final itemCount = vm.historyBookings.length + (vm.historyHasMore ? 1 : 0);
+    final itemCount = vm.filteredHistoryBookings.length + (vm.historyHasMore ? 1 : 0);
     return RefreshIndicator(
       onRefresh: vm.loadHistoryBookings,
       child: ListView.separated(
@@ -200,7 +268,7 @@ class _BookingListViewState extends State<BookingListView> {
         itemCount: itemCount,
         separatorBuilder: (_, a) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
-          if (i >= vm.historyBookings.length) {
+          if (i >= vm.filteredHistoryBookings.length) {
             // Footer while the next page loads (or waiting for the scroll to
             // trigger it). hasMore == false removes this slot entirely.
             return const Padding(
@@ -214,7 +282,7 @@ class _BookingListViewState extends State<BookingListView> {
               ),
             );
           }
-          final b = vm.historyBookings[i];
+          final b = vm.filteredHistoryBookings[i];
           return _BookingCard(booking: b, isAdmin: isAdmin);
         },
       ),

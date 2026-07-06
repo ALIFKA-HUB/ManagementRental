@@ -17,4 +17,12 @@ class AppTime {
     final w = dt.toUtc().add(wibOffset);
     return DateTime(w.year, w.month, w.day);
   }
+
+  static DateTime startOfDay(DateTime dt) {
+    return DateTime(dt.year, dt.month, dt.day);
+  }
+
+  static DateTime endOfDay(DateTime dt) {
+    return DateTime(dt.year, dt.month, dt.day, 23, 59, 59, 999);
+  }
 }
