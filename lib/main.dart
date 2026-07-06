@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'core/navigation/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
+import 'core/utils/connectivity_service.dart';
+import 'core/widgets/connectivity_wrapper.dart';
 import 'features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
@@ -22,6 +24,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => ConnectivityService()),
       ],
       child: const RentalinApp(),
     ),
@@ -42,7 +45,9 @@ class RentalinApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: const AppRouter(),
+          home: ConnectivityWrapper(
+            child: const AppRouter(),
+          ),
         );
       },
     );
