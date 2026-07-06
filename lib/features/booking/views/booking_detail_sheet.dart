@@ -9,6 +9,7 @@ import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/features/booking/viewmodels/booking_viewmodel.dart';
 import 'booking_form_page.dart';
 import 'customer_history_page.dart';
+import 'package:rentalin/core/navigation/app_page_route.dart';
 
 class BookingDetailSheet extends StatelessWidget {
   final BookingModel booking;
@@ -167,7 +168,7 @@ class BookingDetailSheet extends StatelessWidget {
   void _openCustomerHistory(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      AppPageRoute(
         builder: (_) => CustomerHistoryPage(
           customerName: booking.customerName,
           customerPhone: booking.customerPhone,
@@ -182,7 +183,7 @@ class BookingDetailSheet extends StatelessWidget {
     Navigator.pop(context); // close the detail sheet first
     Navigator.push(
       context,
-      MaterialPageRoute(
+      AppPageRoute(
         builder: (_) => ChangeNotifierProvider.value(
           value: vm,
           child: BookingFormPage(existing: booking),

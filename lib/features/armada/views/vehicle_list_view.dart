@@ -8,6 +8,7 @@ import 'package:rentalin/features/armada/viewmodels/vehicle_viewmodel.dart';
 import 'package:rentalin/features/armada/views/vehicle_form_page.dart';
 import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
+import 'package:rentalin/core/navigation/app_page_route.dart';
 
 class VehicleListView extends StatelessWidget {
   const VehicleListView({super.key});
@@ -102,7 +103,7 @@ class _VehicleCard extends StatelessWidget {
           onTap: isAdmin
               ? () => Navigator.push(
                     context,
-                    MaterialPageRoute(
+                    AppPageRoute(
                       builder: (_) => ChangeNotifierProvider.value(
                         value: vm,
                         child: VehicleFormPage(vehicle: vehicle),
@@ -152,7 +153,7 @@ class _VehicleCard extends StatelessWidget {
                       } else if (val == 'edit') {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
+                          AppPageRoute(
                             builder: (_) => VehicleFormPage(vehicle: vehicle),
                           ),
                         );
