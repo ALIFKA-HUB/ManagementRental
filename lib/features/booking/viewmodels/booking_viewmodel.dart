@@ -12,6 +12,7 @@ import 'package:rentalin/data/repositories/driver_repository.dart';
 import 'package:rentalin/data/repositories/settings_repository.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
 import 'package:rentalin/core/utils/app_error.dart';
+import 'package:rentalin/core/utils/connectivity_service.dart';
 import 'package:rentalin/core/utils/firebase_extensions.dart';
 
 enum BookingFilter { all, today, thisWeek }
@@ -381,6 +382,9 @@ class BookingViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       // M-2: Validate duration
       if (!endDateTime.isAfter(startDateTime)) {
         errorMessage = 'Waktu selesai harus setelah waktu mulai.';
@@ -489,6 +493,9 @@ class BookingViewModel extends ChangeNotifier {
     errorMessage = null;
     _safeNotify();
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       await _loadBuffer();
       final conflict = await _bookingRepo.checkConflict(
         vehicleId: vehicle.vehicleId,
@@ -562,6 +569,9 @@ class BookingViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final log = BookingLogModel(
         logId: '',
         action: 'Booking dibatalkan',
@@ -590,6 +600,9 @@ class BookingViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final log = BookingLogModel(
         logId: '',
         action: 'Booking diselesaikan',
@@ -627,6 +640,9 @@ class BookingViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       // M-1: conflict check for extend window before committing
       final original = activeBookings.firstWhere(
         (b) => b.bookingId == bookingId,
@@ -690,6 +706,9 @@ class BookingViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final log = BookingLogModel(
         logId: '',
         action: 'Status bayar diubah ke ${newStatus.label}',

@@ -3,6 +3,7 @@ import 'package:rentalin/data/models/vehicle_model.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
 import 'package:rentalin/core/utils/app_error.dart';
+import 'package:rentalin/core/utils/connectivity_service.dart';
 import 'package:rentalin/core/utils/firebase_extensions.dart';
 
 class VehicleViewModel extends ChangeNotifier {
@@ -41,6 +42,9 @@ class VehicleViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final plateExists = await _vehicleRepo.checkPlateExists(plateNumber).withFirebaseTimeout();
       if (plateExists) {
         errorMessage = 'Plat nomor sudah terdaftar.';
@@ -88,6 +92,9 @@ class VehicleViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final plateExists = await _vehicleRepo.checkPlateExists(
         plateNumber,
         excludeId: vehicle.vehicleId,
@@ -126,6 +133,9 @@ class VehicleViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      if (!ConnectivityService().isOnline) {
+        throw AppError('Tidak ada koneksi internet. Data tidak dapat disimpan.');
+      }
       final activeBookings = await _bookingRepo.getActiveBookings().withFirebaseTimeout();
       final hasActive = activeBookings.any((b) => b.vehicleId == vehicleId);
       if (hasActive) {
@@ -149,11 +159,23 @@ class VehicleViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> toggleStatus(VehicleModel vehicle) async {
+  Future<bool> toggleStatus(VehicleModel vehicle) async {
+    if (!ConnectivityService().isOnline) {
+      errorMessage = 'Tidak ada koneksi internet. Data tidak dapat disimpan.';
+      notifyListeners();
+      return false;
+    }
     final newStatus = vehicle.status == VehicleStatus.ready
         ? VehicleStatus.maintenance
         : VehicleStatus.ready;
-    await _vehicleRepo.updateStatus(vehicle.vehicleId, newStatus).withFirebaseTimeout();
-    await loadVehicles();
+    try {
+      await _vehicleRepo.updateStatus(vehicle.vehicleId, newStatus).withFirebaseTimeout();
+      await loadVehicles();
+      return true;
+    } catch (e) {
+      errorMessage = 'Gagal mengubah status kendaraan.';
+      notifyListeners();
+      return false;
+    }
   }
 }
