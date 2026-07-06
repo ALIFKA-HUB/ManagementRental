@@ -154,7 +154,10 @@ class _VehicleCard extends StatelessWidget {
                         Navigator.push(
                           context,
                           AppPageRoute(
-                            builder: (_) => VehicleFormPage(vehicle: vehicle),
+                            builder: (_) => ChangeNotifierProvider.value(
+                              value: vm,
+                              child: VehicleFormPage(vehicle: vehicle),
+                            ),
                           ),
                         );
                       } else if (val == 'delete') {
