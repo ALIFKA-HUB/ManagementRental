@@ -17,6 +17,7 @@ class AppRouter extends StatefulWidget {
 
 class _AppRouterState extends State<AppRouter> {
   bool _showSplash = true;
+  bool _isLoadingUser = false;
 
   @override
   void initState() {
@@ -51,12 +52,25 @@ class _AppRouterState extends State<AppRouter> {
 
         // Not logged in
         if (!snapshot.hasData || snapshot.data == null) {
+          _isLoadingUser = false;
           return const LoginPage();
         }
 
-        // Logged in — load user model if not yet loaded
+        // Logged in — load user model if not yet loaded (guard against repeated calls)
+        if (authVM.currentUser == null && !_isLoadingUser) {
+          _isLoadingUser = true;
+          // Use addPostFrameCallback to avoid calling notifyListeners during build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              authVM.loadCurrentUser(snapshot.data!.uid).then((_) {
+                if (mounted) _isLoadingUser = false;
+              });
+            }
+          });
+          return const _LoadingScreen(message: 'Menyiapkan data pengguna...');
+        }
+
         if (authVM.currentUser == null) {
-          authVM.loadCurrentUser(snapshot.data!.uid);
           return const _LoadingScreen(message: 'Menyiapkan data pengguna...');
         }
 

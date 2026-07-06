@@ -53,6 +53,8 @@ class DashboardViewModel extends ChangeNotifier {
   }
 
   Future<void> load() async {
+    // B-05: Guard against concurrent calls (e.g. multiple rebuilds triggering load)
+    if (isLoading) return;
     isLoading = true;
     errorMessage = null;
     _safeNotify();
