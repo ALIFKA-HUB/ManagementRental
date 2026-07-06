@@ -3,6 +3,8 @@ import 'package:rentalin/data/models/driver_model.dart';
 import 'package:rentalin/data/repositories/auth_repository.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
 import 'package:rentalin/data/repositories/driver_repository.dart';
+import 'package:rentalin/core/utils/app_error.dart';
+import 'package:rentalin/core/utils/firebase_extensions.dart';
 
 class DriverViewModel extends ChangeNotifier {
   final DriverRepository _driverRepo = DriverRepository();
@@ -18,9 +20,13 @@ class DriverViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      drivers = await _driverRepo.getAll();
-    } catch (_) {
-      errorMessage = 'Gagal memuat data supir.';
+      drivers = await _driverRepo.getAll().withFirebaseTimeout();
+    } catch (e) {
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal memuat data supir.';
+      }
     }
     isLoading = false;
     notifyListeners();
@@ -41,7 +47,7 @@ class DriverViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final codeExists = await _driverRepo.checkCodeIdExists(codeId);
+      final codeExists = await _driverRepo.checkCodeIdExists(codeId).withFirebaseTimeout();
       if (codeExists) {
         errorMessage = 'Kode ID supir sudah digunakan.';
         isLoading = false;
@@ -56,7 +62,7 @@ class DriverViewModel extends ChangeNotifier {
         phone: phone,
         email: email,
         password: password,
-      );
+      ).withFirebaseTimeout();
 
       await loadDrivers();
       return true;
@@ -86,7 +92,7 @@ class DriverViewModel extends ChangeNotifier {
       final codeExists = await _driverRepo.checkCodeIdExists(
         codeId,
         excludeId: driver.driverId,
-      );
+      ).withFirebaseTimeout();
       if (codeExists) {
         errorMessage = 'Kode ID sudah digunakan supir lain.';
         isLoading = false;
@@ -94,11 +100,15 @@ class DriverViewModel extends ChangeNotifier {
         return false;
       }
 
-      await _driverRepo.update(driver.copyWith(name: name, codeId: codeId, phone: phone));
+      await _driverRepo.update(driver.copyWith(name: name, codeId: codeId, phone: phone)).withFirebaseTimeout();
       await loadDrivers();
       return true;
-    } catch (_) {
-      errorMessage = 'Gagal mengupdate data supir.';
+    } catch (e) {
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal mengupdate data supir.';
+      }
       isLoading = false;
       notifyListeners();
       return false;
@@ -111,7 +121,7 @@ class DriverViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final active = await _bookingRepo.getActiveBookings();
+      final active = await _bookingRepo.getActiveBookings().withFirebaseTimeout();
       if (active.any((b) => b.driverId == driverId)) {
         errorMessage = 'Supir masih memiliki booking aktif.';
         isLoading = false;
@@ -141,11 +151,15 @@ class DriverViewModel extends ChangeNotifier {
           ? linkedUserId
           : (await _driverRepo.getById(driverId))?.userId ?? '';
 
-      await _authRepo.deleteDriverAccount(driverId: driverId, userId: userId);
+      await _authRepo.deleteDriverAccount(driverId: driverId, userId: userId).withFirebaseTimeout();
       await loadDrivers();
       return true;
-    } catch (_) {
-      errorMessage = 'Gagal menghapus supir.';
+    } catch (e) {
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal menghapus supir.';
+      }
       isLoading = false;
       notifyListeners();
       return false;

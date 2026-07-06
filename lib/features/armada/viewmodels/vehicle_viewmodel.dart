@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:rentalin/data/models/vehicle_model.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
+import 'package:rentalin/core/utils/app_error.dart';
+import 'package:rentalin/core/utils/firebase_extensions.dart';
 
 class VehicleViewModel extends ChangeNotifier {
   final VehicleRepository _vehicleRepo = VehicleRepository();
@@ -16,9 +18,13 @@ class VehicleViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      vehicles = await _vehicleRepo.getAll();
+      vehicles = await _vehicleRepo.getAll().withFirebaseTimeout();
     } catch (e) {
-      errorMessage = 'Gagal memuat data kendaraan.';
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal memuat data kendaraan.';
+      }
     }
     isLoading = false;
     notifyListeners();
@@ -35,7 +41,7 @@ class VehicleViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final plateExists = await _vehicleRepo.checkPlateExists(plateNumber);
+      final plateExists = await _vehicleRepo.checkPlateExists(plateNumber).withFirebaseTimeout();
       if (plateExists) {
         errorMessage = 'Plat nomor sudah terdaftar.';
         isLoading = false;
@@ -55,11 +61,15 @@ class VehicleViewModel extends ChangeNotifier {
         createdAt: now,
         updatedAt: now,
       );
-      await _vehicleRepo.add(vehicle);
+      await _vehicleRepo.add(vehicle).withFirebaseTimeout();
       await loadVehicles();
       return true;
     } catch (e) {
-      errorMessage = 'Gagal menambah kendaraan.';
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal menambah kendaraan.';
+      }
       isLoading = false;
       notifyListeners();
       return false;
@@ -81,7 +91,7 @@ class VehicleViewModel extends ChangeNotifier {
       final plateExists = await _vehicleRepo.checkPlateExists(
         plateNumber,
         excludeId: vehicle.vehicleId,
-      );
+      ).withFirebaseTimeout();
       if (plateExists) {
         errorMessage = 'Plat nomor sudah terdaftar.';
         isLoading = false;
@@ -95,11 +105,15 @@ class VehicleViewModel extends ChangeNotifier {
         category: category,
         conditionNotes: conditionNotes,
       );
-      await _vehicleRepo.update(updated);
+      await _vehicleRepo.update(updated).withFirebaseTimeout();
       await loadVehicles();
       return true;
     } catch (e) {
-      errorMessage = 'Gagal mengupdate kendaraan.';
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal mengupdate kendaraan.';
+      }
       isLoading = false;
       notifyListeners();
       return false;
@@ -112,7 +126,7 @@ class VehicleViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final activeBookings = await _bookingRepo.getActiveBookings();
+      final activeBookings = await _bookingRepo.getActiveBookings().withFirebaseTimeout();
       final hasActive = activeBookings.any((b) => b.vehicleId == vehicleId);
       if (hasActive) {
         errorMessage = 'Kendaraan masih memiliki booking aktif.';
@@ -120,11 +134,15 @@ class VehicleViewModel extends ChangeNotifier {
         notifyListeners();
         return false;
       }
-      await _vehicleRepo.delete(vehicleId);
+      await _vehicleRepo.delete(vehicleId).withFirebaseTimeout();
       await loadVehicles();
       return true;
     } catch (e) {
-      errorMessage = 'Gagal menghapus kendaraan.';
+      if (e is AppError) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = 'Gagal menghapus kendaraan.';
+      }
       isLoading = false;
       notifyListeners();
       return false;
@@ -135,7 +153,7 @@ class VehicleViewModel extends ChangeNotifier {
     final newStatus = vehicle.status == VehicleStatus.ready
         ? VehicleStatus.maintenance
         : VehicleStatus.ready;
-    await _vehicleRepo.updateStatus(vehicle.vehicleId, newStatus);
+    await _vehicleRepo.updateStatus(vehicle.vehicleId, newStatus).withFirebaseTimeout();
     await loadVehicles();
   }
 }
