@@ -69,7 +69,6 @@ class _ScheduleContent extends StatelessWidget {
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: vm.focusedDay,
             selectedDayPredicate: (day) => isSameDay(vm.selectedDay, day),
-            eventLoader: vm.getEventsForDay,
             calendarFormat: CalendarFormat.month,
             headerStyle: const HeaderStyle(
               formatButtonVisible: false,
@@ -87,31 +86,6 @@ class _ScheduleContent extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            calendarBuilders: CalendarBuilders(
-              markerBuilder: (context, date, events) {
-                final activeEvents = events.where((e) => e.bookingStatus.name != 'cancelled').toList();
-                if (activeEvents.isEmpty) return const SizedBox();
-                final isSelected = isSameDay(date, vm.selectedDay);
-                return Positioned(
-                  bottom: 4,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(
-                      activeEvents.length > 3 ? 3 : activeEvents.length,
-                      (index) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected ? Colors.white : AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
             ),
             onDaySelected: (selected, focused) {
               vm.selectDay(selected, focused);
