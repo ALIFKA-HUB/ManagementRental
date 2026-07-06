@@ -476,7 +476,7 @@ class _DateTimeButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.all(14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: const BorderSide(color: Color(0xFFE5E7EB)),
+        side: BorderSide(color: Theme.of(context).dividerColor),
         alignment: Alignment.centerLeft,
       ),
       onPressed: onTap,
