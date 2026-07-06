@@ -46,7 +46,7 @@ class _AppRouterState extends State<AppRouter> {
       builder: (context, snapshot) {
         // Loading Auth State
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(backgroundColor: Colors.white);
+          return const _LoadingScreen(message: 'Memuat sesi...');
         }
 
         // Not logged in
@@ -57,7 +57,7 @@ class _AppRouterState extends State<AppRouter> {
         // Logged in — load user model if not yet loaded
         if (authVM.currentUser == null) {
           authVM.loadCurrentUser(snapshot.data!.uid);
-          return const Scaffold(backgroundColor: Colors.white);
+          return const _LoadingScreen(message: 'Menyiapkan data pengguna...');
         }
 
         // Route berdasarkan role
@@ -67,6 +67,52 @@ class _AppRouterState extends State<AppRouter> {
           return const OperatorShell();
         }
       },
+    );
+  }
+}
+
+class _LoadingScreen extends StatefulWidget {
+  final String message;
+  const _LoadingScreen({required this.message});
+
+  @override
+  State<_LoadingScreen> createState() => _LoadingScreenState();
+}
+
+class _LoadingScreenState extends State<_LoadingScreen> {
+  bool _isTimeout = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() => _isTimeout = true);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              _isTimeout ? 'Waktu habis. Tidak ada koneksi internet atau server lambat.' : widget.message,
+              style: TextStyle(
+                color: _isTimeout ? Colors.red : Colors.grey[600],
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

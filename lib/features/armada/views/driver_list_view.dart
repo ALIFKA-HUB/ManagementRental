@@ -4,6 +4,7 @@ import 'package:rentalin/core/theme/app_colors.dart';
 import 'package:rentalin/core/widgets/app_empty_state.dart';
 import 'package:rentalin/data/models/driver_model.dart';
 import 'package:rentalin/features/armada/viewmodels/driver_viewmodel.dart';
+import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'driver_form_page.dart';
 
@@ -13,6 +14,8 @@ class DriverListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<DriverViewModel>();
+    final authVM = context.watch<AuthViewModel>();
+    final isAdmin = authVM.currentUser?.isAdmin ?? false;
 
     if (vm.isLoading && vm.drivers.isEmpty) {
       return const AppListSkeleton();
@@ -33,7 +36,7 @@ class DriverListView extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
           final d = vm.drivers[i];
-          return _DriverCard(driver: d);
+          return _DriverCard(driver: d, isAdmin: isAdmin);
         },
       ),
     );
@@ -42,7 +45,8 @@ class DriverListView extends StatelessWidget {
 
 class _DriverCard extends StatelessWidget {
   final DriverModel driver;
-  const _DriverCard({required this.driver});
+  final bool isAdmin;
+  const _DriverCard({required this.driver, required this.isAdmin});
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +185,7 @@ class _DriverCard extends StatelessWidget {
                               ),
                             );
                             if (confirm == true && context.mounted) {
-                              vm.deleteDriver(driver.id);
+                              vm.deleteDriver(driver.driverId);
                             }
                           }
                         },
