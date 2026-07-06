@@ -15,6 +15,7 @@ import 'package:rentalin/features/booking/views/booking_detail_sheet.dart';
 import 'package:rentalin/features/dashboard/viewmodels/dashboard_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'package:rentalin/core/navigation/app_page_route.dart';
+import 'package:rentalin/features/income/views/income_page.dart';
 
 class DashboardPage extends StatelessWidget {
   final VoidCallback? onGoToArmada;
@@ -104,23 +105,36 @@ class _DashboardContent extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 children: [
                   if (vm.stats != null) ...[
-                    // HERO METRIC
+                    // HERO METRIC — tappable → IncomePage
                     Semantics(
                       label: 'card_pendapatan',
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(AppSpacing.xl),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(AppRadius.card),
+                      child: InkWell(
+                        onTap: () => Navigator.push(
+                          context,
+                          AppPageRoute(builder: (_) => const IncomePage()),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Pendapatan Hari Ini', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                            const SizedBox(height: 8),
-                            Text(currency.format(vm.stats!.todayRevenue), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-                          ],
+                        borderRadius: BorderRadius.circular(AppRadius.card),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(AppRadius.card),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('Pendapatan Hari Ini', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                                  const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(currency.format(vm.stats!.todayRevenue), style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
