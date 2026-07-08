@@ -10,7 +10,37 @@ class VehicleViewModel extends ChangeNotifier {
   final VehicleRepository _vehicleRepo = VehicleRepository();
   final BookingRepository _bookingRepo = BookingRepository();
 
-  List<VehicleModel> vehicles = [];
+  List<VehicleModel> _allVehicles = [];
+  String _searchQuery = '';
+  VehicleCategory? _selectedCategory;
+
+  List<VehicleModel> get vehicles {
+    if (_searchQuery.isEmpty && _selectedCategory == null) {
+      return _allVehicles;
+    }
+    return _allVehicles.where((v) {
+      final matchesSearch = v.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          v.plateNumber.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory = _selectedCategory == null || v.category == _selectedCategory;
+      return matchesSearch && matchesCategory;
+    }).toList();
+  }
+
+  String get searchQuery => _searchQuery;
+  VehicleCategory? get selectedCategory => _selectedCategory;
+
+  bool get isOriginalListEmpty => _allVehicles.isEmpty;
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
+  void setSelectedCategory(VehicleCategory? category) {
+    _selectedCategory = category;
+    notifyListeners();
+  }
+
   bool isLoading = false;
   String? errorMessage;
 
@@ -19,7 +49,7 @@ class VehicleViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      vehicles = await _vehicleRepo.getAll().withFirebaseTimeout();
+      _allVehicles = await _vehicleRepo.getAll().withFirebaseTimeout();
     } catch (e) {
       if (e is AppError) {
         errorMessage = e.message;

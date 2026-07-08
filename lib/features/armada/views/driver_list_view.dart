@@ -9,8 +9,28 @@ import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'driver_form_page.dart';
 import 'package:rentalin/core/navigation/app_page_route.dart';
 
-class DriverListView extends StatelessWidget {
+class DriverListView extends StatefulWidget {
   const DriverListView({super.key});
+
+  @override
+  State<DriverListView> createState() => _DriverListViewState();
+}
+
+class _DriverListViewState extends State<DriverListView> {
+  late final TextEditingController _searchCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final vm = context.read<DriverViewModel>();
+    _searchCtrl = TextEditingController(text: vm.searchQuery);
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,28 +38,76 @@ class DriverListView extends StatelessWidget {
     final authVM = context.watch<AuthViewModel>();
     final isAdmin = authVM.currentUser?.isAdmin ?? false;
 
-    if (vm.isLoading && vm.drivers.isEmpty) {
+    if (_searchCtrl.text != vm.searchQuery) {
+      _searchCtrl.text = vm.searchQuery;
+    }
+
+    if (vm.isLoading && vm.isOriginalListEmpty) {
       return const AppListSkeleton();
     }
 
-    if (vm.drivers.isEmpty) {
-      return const AppEmptyState(
-        title: 'Belum ada supir',
-        icon: Icons.person_off_outlined,
-      );
-    }
+    return Column(
+      children: [
+        // Pinned Search Bar
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: InputDecoration(
+              hintText: 'Cari nama, ID, atau nomor hp...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: vm.searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () => vm.setSearchQuery(''),
+                    )
+                  : null,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+              ),
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            ),
+            onChanged: vm.setSearchQuery,
+          ),
+        ),
 
-    return RefreshIndicator(
-      onRefresh: vm.loadDrivers,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: vm.drivers.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 8),
-        itemBuilder: (context, i) {
-          final d = vm.drivers[i];
-          return _DriverCard(driver: d, isAdmin: isAdmin);
-        },
-      ),
+        // List Supir
+        Expanded(
+          child: vm.drivers.isEmpty
+              ? (vm.searchQuery.isNotEmpty
+                  ? const AppEmptyState(
+                      title: 'Supir tidak ditemukan',
+                      icon: Icons.search_off_outlined,
+                    )
+                  : const AppEmptyState(
+                      title: 'Belum ada supir',
+                      icon: Icons.person_off_outlined,
+                    ))
+              : RefreshIndicator(
+                  onRefresh: vm.loadDrivers,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    itemCount: vm.drivers.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, i) {
+                      final d = vm.drivers[i];
+                      return _DriverCard(driver: d, isAdmin: isAdmin);
+                    },
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }

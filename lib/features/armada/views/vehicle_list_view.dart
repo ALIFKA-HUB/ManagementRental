@@ -10,36 +10,147 @@ import 'package:rentalin/features/auth/viewmodels/auth_viewmodel.dart';
 import 'package:rentalin/core/widgets/app_skeleton.dart';
 import 'package:rentalin/core/navigation/app_page_route.dart';
 
-class VehicleListView extends StatelessWidget {
+class VehicleListView extends StatefulWidget {
   const VehicleListView({super.key});
+
+  @override
+  State<VehicleListView> createState() => _VehicleListViewState();
+}
+
+class _VehicleListViewState extends State<VehicleListView> {
+  late final TextEditingController _searchCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final vm = context.read<VehicleViewModel>();
+    _searchCtrl = TextEditingController(text: vm.searchQuery);
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<VehicleViewModel>();
     final isAdmin = context.watch<AuthViewModel>().currentUser?.isAdmin ?? false;
 
-    if (vm.isLoading && vm.vehicles.isEmpty) {
+    if (_searchCtrl.text != vm.searchQuery) {
+      _searchCtrl.text = vm.searchQuery;
+    }
+
+    if (vm.isLoading && vm.isOriginalListEmpty) {
       return const AppListSkeleton();
     }
 
-    if (vm.vehicles.isEmpty && !isAdmin) {
-      return const AppEmptyState(
-        title: 'Belum ada kendaraan',
-        icon: Icons.directions_car_outlined,
-      );
-    }
+    return Column(
+      children: [
+        // Pinned Search Bar
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: InputDecoration(
+              hintText: 'Cari nama atau plat nomor...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: vm.searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () => vm.setSearchQuery(''),
+                    )
+                  : null,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+              ),
+              filled: true,
+              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            ),
+            onChanged: vm.setSearchQuery,
+          ),
+        ),
 
-    return RefreshIndicator(
-      onRefresh: vm.loadVehicles,
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: vm.vehicles.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 8),
-        itemBuilder: (context, i) {
-          final v = vm.vehicles[i];
-          return _VehicleCard(vehicle: v, isAdmin: isAdmin);
-        },
-      ),
+        // Category Chips
+        SizedBox(
+          height: 40,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              ChoiceChip(
+                label: const Text('Semua'),
+                selected: vm.selectedCategory == null,
+                onSelected: (selected) {
+                  if (selected) vm.setSelectedCategory(null);
+                },
+                selectedColor: AppColors.primary,
+                labelStyle: TextStyle(
+                  color: vm.selectedCategory == null ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ...VehicleCategory.values.map((cat) {
+                final isSelected = vm.selectedCategory == cat;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(cat.label),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      vm.setSelectedCategory(selected ? cat : null);
+                    },
+                    selectedColor: AppColors.primary,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // List Kendaraan
+        Expanded(
+          child: vm.vehicles.isEmpty
+              ? (vm.searchQuery.isNotEmpty || vm.selectedCategory != null
+                  ? const AppEmptyState(
+                      title: 'Kendaraan tidak ditemukan',
+                      icon: Icons.search_off_outlined,
+                    )
+                  : const AppEmptyState(
+                      title: 'Belum ada kendaraan',
+                      icon: Icons.directions_car_outlined,
+                    ))
+              : RefreshIndicator(
+                  onRefresh: vm.loadVehicles,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    itemCount: vm.vehicles.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, i) {
+                      final v = vm.vehicles[i];
+                      return _VehicleCard(vehicle: v, isAdmin: isAdmin);
+                    },
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }
