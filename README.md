@@ -1,83 +1,138 @@
 # Rentalin (Aplikasi Manajemen Rental Mobil)
 
-**Rentalin** adalah aplikasi mobile internal untuk mengelola operasional harian usaha rental mobil. Aplikasi ini digunakan oleh pemilik usaha (admin) untuk mengatur jadwal booking, armada kendaraan, supir, dan memantau status pembayaran. Supir (operator) mendapatkan akses terbatas untuk melihat jadwal tugas mereka.
+[![Flutter Version](https://img.shields.io/badge/Flutter-v3.22+-blue.svg?logo=flutter)](https://flutter.dev)
+[![Platform Support](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-orange.svg)](https://flutter.dev)
+[![Database](https://img.shields.io/badge/Database-Firebase%20Firestore-yellow.svg?logo=firebase)](https://firebase.google.com)
 
-> **Catatan:** Aplikasi ini **bukan** untuk pelanggan/publik. Distribusi dilakukan via file APK/IPA langsung (tanpa Play Store/App Store).
+**Rentalin** adalah aplikasi mobile internal operasional untuk manajemen usaha rental mobil secara end-to-end. Aplikasi dirancang khusus untuk pemilik rental (Admin) dalam menjadwalkan armada, supir, mencatat pendapatan/piutang, serta supir (Operator) dalam memantau jadwal tugas harian mereka.
 
----
-
-## 👥 Target User & Role
-
-| Role | Pengguna | Akses |
-|------|----------|-------|
-| **Admin** | Pemilik usaha | Full access: CRUD booking, armada, supir, laporan keuangan, manajemen akun operator |
-| **Operator** | Supir | Read-only: lihat semua jadwal di kalender, lihat armada. Home hanya menampilkan jadwal yang di-assign kepadanya |
+> [!NOTE]
+> Aplikasi ini **bukan** untuk pelanggan publik. Distribusi dilakukan secara langsung (Direct Install) via berkas APK/IPA tanpa melalui Play Store atau App Store.
 
 ---
 
-## 🛠 Tech Stack
+## 👥 Target Pengguna & Peran (Role Access)
 
-- **Framework:** Flutter (Dart) - Cross-platform (Android & iOS)
-- **Arsitektur:** MVVM (Provider / Riverpod)
-- **Backend & Database:** Firebase (Cloud Firestore)
-- **Authentication:** Firebase Auth (Email & Password)
-- **Storage:** Firebase Cloud Storage
-- **Distribusi:** Direct Install (APK/IPA)
+| Peran (Role) | Target Pengguna | Hak Akses Utama |
+|---|---|---|
+| **👑 Admin** | Pemilik Usaha / Manajemen | Akses Penuh (CRUD Booking, Armada Kendaraan, Driver, Keuangan, & Manajemen Akun Operator). |
+| **🚗 Operator** | Supir Rental | Akses Terbatas (Melihat jadwal penugasan harian & daftar armada, tanpa bisa mengedit). |
 
 ---
 
-## 🎨 Design System (Neobank Style)
+## 📸 Dokumentasi Visual & Gambaran Aplikasi
 
-Antarmuka aplikasi mengadopsi gaya **Neobank** yang bersih, modern, dan memiliki kontras tinggi dengan panduan desain sebagai berikut:
+Berikut adalah visualisasi antarmuka aplikasi dengan tema **Neobank Style**:
 
-### Skema Warna
-- **Background:** Off-white / Abu-abu sangat terang (`#F9FAFB`)
-- **Surface:** Putih Murni (`#FFFFFF`) dengan shadow halus
-- **Primary / Aksen:** Hijau Lime/Neon (`#A3E635`)
-- **Secondary:** Hitam Pekat / Abu gelap (`#1F2937`)
+### 1. Dashboard Utama (Metrik & Pencarian)
+Dashboard menampilkan ringkasan performa armada, metrik operasional secara real-time, pencarian global, dan riwayat transaksi terbaru.
+![Dashboard](assets/readme/dashboard.png)
 
-### Tipografi
-- **Font Family:** Inter / Poppins
-- **Karakteristik:** Bersih, membulat, dan mudah dibaca. Hierarki teks tebal (bold) pada saldo/angka metrik, dan reguler pada deskripsi.
+### 2. Pencarian & Penyaringan Kategori Armada
+Penyaringan armada berbasis memori reaktif dengan kolom pencarian nama/plat nomor serta Choice Chips filter kategori.
+![Pencarian Armada](assets/readme/armada_search.png)
 
-### Komponen UI & Bentuk
-- Menggunakan sudut membulat (*rounded corners*, radius 16px - 24px) pada tombol, kartu, dan input.
-- Berfokus pada penggunaan *whitespace* (ruang kosong) yang lega untuk menjaga tampilan tetap teratur dan elegan.
-- *Bottom Navigation Bar* untuk navigasi antar halaman utama.
+### 3. Kalender & Jadwal Penugasan (Calendar Dots)
+Kalender interaktif dilengkapi dengan bulatan penanda jadwal aktif (1, 2, 3 titik, atau tanda `+` jika lebih dari 3). Tanggal yang dipilih secara otomatis menyembunyikan titik penanda untuk menghindari visual bertumpuk.
+![Kalender Dots](assets/readme/calendar_dots.png)
+
+### 4. Transisi Skeleton Loading Premium
+Efek skeleton loading terisolasi di area list kendaraan dan supir tanpa mengaburkan kolom pencarian di bagian atas, mengeliminasi layout shift yang mengganggu.
+![Skeleton Loading](assets/readme/armada_skeleton_loading.png)
 
 ---
 
-## 📌 Fitur Utama
+## 🛠️ Stack Teknologi & Arsitektur
 
-### 👑 Admin
-1. **Dashboard (Home):** Pantauan metrik utama (Mobil Keluar, Booking Baru, Menunggu Pelunasan) dan pencarian global.
-2. **Manajemen Booking:** Tambah booking multi-rute, atur status pembayaran (Belum Bayar, DP, Lunas), dan deteksi bentrok jadwal.
-3. **Jadwal (Schedule):** Kalender bulanan yang dilengkapi marker status pembayaran.
-4. **Armada:** CRUD data Kendaraan dan Supir.
-5. **Laporan Keuangan:** Ekspor laporan pemasukan dan piutang ke PDF/Excel.
+- **Frontend Framework:** Flutter & Dart (minimum SDK v3.22)
+- **Arsitektur Aplikasi:** Model-View-ViewModel (MVVM) berbasis **Provider** untuk manajemen state yang reaktif dan teratur.
+- **Backend & Database:** Firebase Cloud Firestore (NoSQL).
+- **Autentikasi:** Firebase Auth (Email & Password).
+- **Keamanan Database:** Aturan Keamanan Firestore (*Firestore Security Rules*) berbasis otorisasi per peran (role).
+- **Penyimpanan:** Firebase Storage (untuk foto armada/dokumen).
+- **Optimasi Jaringan:** Firebase Timeout Guard untuk penanganan kegagalan koneksi lambat secara elegan.
 
-### 🚗 Operator (Supir)
-1. **Dashboard (Home):** Menampilkan tugas jadwal hari ini dan jadwal mendatang yang di-assign kepada supir tersebut.
-2. **Jadwal (Schedule):** Melihat jadwal operasional (Read-only).
-3. **Profil:** Manajemen profil dan preferensi aplikasi (seperti *Dark Mode*).
+---
+
+## 📌 Fitur Utama Aplikasi
+
+### 1. Dashboard & Analitik Keuangan (Admin)
+- **Kartu Metrik Utama:** Jumlah kendaraan keluar, jumlah booking baru hari ini, dan total piutang sewa.
+- **Laporan Pendapatan:** Grafik visual interaktif dengan pengelompokan piutang sewa vs nominal lunas.
+- **Pencarian Global:** Cari data transaksi atau armada langsung dari halaman utama.
+
+### 2. Kalender Jadwal (Schedule Page)
+- **Interactive Calendar:** TableCalendar dengan status reaktif.
+- **Status Markers:** Penanda warna hijau (lunas), kuning (DP), merah (belum lunas), dan penanda titik di bawah cell kalender.
+- **Visual Staggered Animation:** Transisi pergeseran (slide-up 12px) dan pemudaran (fade-in) secara bertahap saat memuat detail booking harian.
+
+### 3. Manajemen Armada (Armada Page)
+- **Pencarian Reaktif:** Mencari kendaraan berdasarkan nama atau nomor plat secara real-time.
+- **Filter Kategori:** Choice chips kategori kendaraan (**Semua, Bus, Elf, Hiace, MPV, SUV, Lainnya**).
+- **Pencarian Driver:** Cari driver berdasarkan nama, kode ID, atau nomor handphone.
+- **Optimasi Query:** Pemrosesan filter di level ViewModel untuk meminimalisasi pembacaan dokumen (*read quota*) Firestore.
+
+### 4. Provisioning Akun Driver (Driver Account Lifecycle)
+- **Pendaftaran Driver Atomik:** Pendaftaran akun login Firebase Auth untuk driver sekaligus dokumen Firestore (`users` & `drivers`) dilakukan secara bersamaan dalam satu transaksi batch atomic untuk menghindari sisa data yatim piatu (*orphaned profiles*).
+
+---
+
+## 📂 Struktur Proyek (Project Directory Tree)
+
+```text
+lib/
+├── core/                   # Utilitas global, tema, navigasi, dan widget standar
+│   ├── navigation/         # Navigasi transisi halaman kustom
+│   ├── theme/              # Warna Neobank, tipografi Poppins, bayangan kustom
+│   ├── utils/              # Penanganan exception, format tanggal & rupiah
+│   └── widgets/            # Widget reusable (EmptyState, Skeleton, AppChip, dll.)
+├── data/                   # Logika Data, Model, dan Repositori
+│   ├── models/             # Serialisasi data Firestore (User, Driver, Vehicle, Booking)
+│   └── repositories/       # Abstraksi panggilan Firebase API & Local Caching
+└── features/               # Fitur utama berbasis arsitektur MVVM
+    ├── armada/             # Manajemen Kendaraan & Supir (Views & ViewModels)
+    ├── auth/               # Autentikasi Login (Admin/Operator)
+    ├── booking/            # Formulir sewa, rincian pembayaran, log aktivitas
+    ├── dashboard/          # Metrik ringkasan data real-time
+    ├── income/             # Laporan grafik pendapatan dan piutang
+    └── schedule/           # Kalender & detail agenda penugasan
+```
 
 ---
 
 ## 🚀 Panduan Memulai (Development Setup)
 
-1. Pastikan Anda telah menginstal [Flutter SDK](https://flutter.dev/docs/get-started/install).
-2. Clone repository ini.
-3. Jalankan perintah berikut untuk mengunduh dependencies:
+### Prasyarat
+- Flutter SDK `>= 3.22.0`
+- Akun Google Firebase dengan proyek Firestore aktif.
+- NodeJS `>= v20` (jika menggunakan Firebase CLI).
+
+### Langkah-langkah
+1. **Clone repositori proyek:**
+   ```bash
+   git clone https://github.com/ALIFKA-HUB/ManagementRental.git
+   cd ManagementRental
+   ```
+2. **Instal pustaka dependencies:**
    ```bash
    flutter pub get
    ```
-4. Tambahkan file konfigurasi Firebase:
-   - Letakkan `google-services.json` di `android/app/`
-   - Letakkan `GoogleService-Info.plist` di `ios/Runner/`
-5. Jalankan aplikasi pada emulator atau perangkat fisik:
+3. **Konfigurasi Firebase:**
+   Jalankan inisialisasi FlutterFire atau letakkan file kredensial secara manual:
+   - File Android: `android/app/google-services.json`
+   - File iOS: `ios/Runner/GoogleService-Info.plist`
+4. **Deploy Aturan Keamanan Database & Indeks:**
+   Instal Firebase CLI, lakukan login, lalu jalankan:
+   ```bash
+   firebase use managementrental-16b6d
+   │   
+   │ # Deploy Firestore Rules & Indexes
+   firebase deploy --only firestore
+   ```
+5. **Jalankan Aplikasi:**
    ```bash
    flutter run
    ```
 
 ---
-*Dokumentasi spesifikasi lengkap (PRD) dan rencana implementasi dapat dilihat di dalam folder `docs/specs/rental-management/`.*
+*Dokumentasi spesifikasi lengkap (PRD) dan draf rancangan implementasi terperinci dapat dilihat di folder `docs/superpowers/`.*
