@@ -12,7 +12,30 @@ class DriverViewModel extends ChangeNotifier {
   final BookingRepository _bookingRepo = BookingRepository();
   final AuthRepository _authRepo = AuthRepository();
 
-  List<DriverModel> drivers = [];
+  List<DriverModel> _allDrivers = [];
+  String _searchQuery = '';
+
+  List<DriverModel> get drivers {
+    if (_searchQuery.isEmpty) {
+      return _allDrivers;
+    }
+    return _allDrivers.where((d) {
+      final query = _searchQuery.toLowerCase();
+      return d.name.toLowerCase().contains(query) ||
+          d.codeId.toLowerCase().contains(query) ||
+          d.phone.contains(query);
+    }).toList();
+  }
+
+  String get searchQuery => _searchQuery;
+
+  bool get isOriginalListEmpty => _allDrivers.isEmpty;
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
   bool isLoading = false;
   String? errorMessage;
 
@@ -21,7 +44,7 @@ class DriverViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
     try {
-      drivers = await _driverRepo.getAll().withFirebaseTimeout();
+      _allDrivers = await _driverRepo.getAll().withFirebaseTimeout();
     } catch (e) {
       if (e is AppError) {
         errorMessage = e.message;
