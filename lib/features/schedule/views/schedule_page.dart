@@ -192,27 +192,43 @@ class _ScheduleContent extends StatelessWidget {
             ),
           ),
 
-          // List booking untuk hari terpilih
+          // List booking untuk hari terpilih dengan animasi transisi halus
           Expanded(
-            child: vm.isLoading
-                ? const _ScheduleSkeleton()
-                : vm.selectedDayBookings.isEmpty
-                    ? const AppEmptyState(
-                        title: 'Tidak ada jadwal',
-                        icon: Icons.event_available,
-                      )
-                    : RefreshIndicator(
-                        onRefresh: () => vm.loadMonth(vm.focusedDay),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
-                          itemCount: vm.selectedDayBookings.length,
-                          separatorBuilder: (_, a) => const SizedBox(height: 8),
-                          itemBuilder: (context, i) {
-                            final b = vm.selectedDayBookings[i];
-                            return _ScheduleBookingCard(booking: b, isAdmin: isAdmin);
-                          },
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
+              },
+              child: vm.isLoading
+                  ? const _ScheduleSkeleton(key: ValueKey('loading'))
+                  : vm.selectedDayBookings.isEmpty
+                      ? const AppEmptyState(
+                          key: ValueKey('empty'),
+                          title: 'Tidak ada jadwal',
+                          icon: Icons.event_available,
+                        )
+                      : RefreshIndicator(
+                          key: ValueKey('list_${vm.selectedDay.millisecondsSinceEpoch}'),
+                          onRefresh: () => vm.loadMonth(vm.focusedDay),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
+                            itemCount: vm.selectedDayBookings.length,
+                            separatorBuilder: (_, a) => const SizedBox(height: 8),
+                            itemBuilder: (context, i) {
+                              final b = vm.selectedDayBookings[i];
+                              return _ScheduleBookingCard(
+                                key: ValueKey(b.bookingId),
+                                booking: b,
+                                isAdmin: isAdmin,
+                                index: i,
+                              );
+                            },
+                          ),
                         ),
-                      ),
+            ),
           ),
         ],
       ),
@@ -223,68 +239,88 @@ class _ScheduleContent extends StatelessWidget {
 class _ScheduleBookingCard extends StatelessWidget {
   final BookingModel booking;
   final bool isAdmin;
+  final int index;
 
-  const _ScheduleBookingCard({required this.booking, required this.isAdmin});
+  const _ScheduleBookingCard({
+    super.key,
+    required this.booking,
+    required this.isAdmin,
+    this.index = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     final timeFmt = DateFormat('HH:mm', 'id');
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 1,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          final vm = context.read<ScheduleViewModel>();
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-            builder: (ctx) => ChangeNotifierProvider(
-              create: (_) => BookingViewModel()..loadActiveBookings(),
-              child: BookingDetailSheet(booking: booking, isAdmin: isAdmin),
-            ),
-          ).then((_) => vm.loadMonth(vm.focusedDay));
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Time indicator
-              Column(
-                children: [
-                  Text(timeFmt.format(booking.startDateTime), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  const Icon(Icons.more_vert, size: 14, color: Colors.grey),
-                  Text(timeFmt.format(booking.endDateTime), style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 250 + (index * 50).clamp(0, 150)),
+      curve: Curves.easeOutCubic,
+      tween: Tween<double>(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 12 * (1.0 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        elevation: 1,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            final vm = context.read<ScheduleViewModel>();
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+              builder: (ctx) => ChangeNotifierProvider(
+                create: (_) => BookingViewModel()..loadActiveBookings(),
+                child: BookingDetailSheet(booking: booking, isAdmin: isAdmin),
               ),
-              const SizedBox(width: 12),
-              Container(width: 3, height: 50, decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ).then((_) => vm.loadMonth(vm.focusedDay));
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Time indicator
+                Column(
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(booking.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        const SizedBox(width: 8),
-                        AppChip(label: booking.effectiveStatusLabel),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text('${booking.vehicleName} • ${booking.driverName}', style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 2),
-                    if (booking.routes.isNotEmpty)
-                      Text(booking.routes.join(' -> '), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey), overflow: TextOverflow.ellipsis),
+                    Text(timeFmt.format(booking.startDateTime), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const Icon(Icons.more_vert, size: 14, color: Colors.grey),
+                    Text(timeFmt.format(booking.endDateTime), style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Container(width: 3, height: 50, decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(booking.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                          const SizedBox(width: 8),
+                          AppChip(label: booking.effectiveStatusLabel),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text('${booking.vehicleName} • ${booking.driverName}', style: Theme.of(context).textTheme.bodySmall),
+                      const SizedBox(height: 2),
+                      if (booking.routes.isNotEmpty)
+                        Text(booking.routes.join(' -> '), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey), overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -293,7 +329,7 @@ class _ScheduleBookingCard extends StatelessWidget {
 }
 
 class _ScheduleSkeleton extends StatelessWidget {
-  const _ScheduleSkeleton();
+  const _ScheduleSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
