@@ -42,10 +42,6 @@ class _VehicleListViewState extends State<VehicleListView> {
       _searchCtrl.text = vm.searchQuery;
     }
 
-    if (vm.isLoading && vm.isOriginalListEmpty) {
-      return const AppListSkeleton();
-    }
-
     return Column(
       children: [
         // Pinned Search Bar
@@ -127,28 +123,30 @@ class _VehicleListViewState extends State<VehicleListView> {
 
         // List Kendaraan
         Expanded(
-          child: vm.vehicles.isEmpty
-              ? (vm.searchQuery.isNotEmpty || vm.selectedCategory != null
-                  ? const AppEmptyState(
-                      title: 'Kendaraan tidak ditemukan',
-                      icon: Icons.search_off_outlined,
-                    )
-                  : const AppEmptyState(
-                      title: 'Belum ada kendaraan',
-                      icon: Icons.directions_car_outlined,
-                    ))
-              : RefreshIndicator(
-                  onRefresh: vm.loadVehicles,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                    itemCount: vm.vehicles.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, i) {
-                      final v = vm.vehicles[i];
-                      return _VehicleCard(vehicle: v, isAdmin: isAdmin);
-                    },
-                  ),
-                ),
+          child: vm.isLoading && vm.isOriginalListEmpty
+              ? const AppListSkeleton()
+              : vm.vehicles.isEmpty
+                  ? (vm.searchQuery.isNotEmpty || vm.selectedCategory != null
+                      ? const AppEmptyState(
+                          title: 'Kendaraan tidak ditemukan',
+                          icon: Icons.search_off_outlined,
+                        )
+                      : const AppEmptyState(
+                          title: 'Belum ada kendaraan',
+                          icon: Icons.directions_car_outlined,
+                        ))
+                  : RefreshIndicator(
+                      onRefresh: vm.loadVehicles,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                        itemCount: vm.vehicles.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, i) {
+                          final v = vm.vehicles[i];
+                          return _VehicleCard(vehicle: v, isAdmin: isAdmin);
+                        },
+                      ),
+                    ),
         ),
       ],
     );
