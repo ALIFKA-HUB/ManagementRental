@@ -69,6 +69,7 @@ class _ScheduleContent extends StatelessWidget {
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: vm.focusedDay,
             selectedDayPredicate: (day) => isSameDay(vm.selectedDay, day),
+            eventLoader: vm.getEventsForDay,
             calendarFormat: CalendarFormat.month,
             headerStyle: const HeaderStyle(
               formatButtonVisible: false,
@@ -86,6 +87,78 @@ class _ScheduleContent extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, date, events) {
+                final activeEvents = events
+                    .where((e) => e.bookingStatus != BookingStatus.cancelled)
+                    .toList();
+                if (activeEvents.isEmpty) return const SizedBox();
+                final isSelected = isSameDay(date, vm.selectedDay);
+                final markerColor = isSelected ? Colors.white : AppColors.primary;
+
+                if (activeEvents.length > 3) {
+                  // Opsi A: 2 titik biasa, 1 tanda plus
+                  return Positioned(
+                    bottom: 4,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: markerColor,
+                          ),
+                        ),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: markerColor,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 1.5),
+                          child: Text(
+                            '+',
+                            style: TextStyle(
+                              color: markerColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              height: 1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  // Menampilkan titik bulat biasa sejumlah activeEvents (1, 2, atau 3)
+                  return Positioned(
+                    bottom: 4,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(
+                        activeEvents.length,
+                        (index) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: markerColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
             onDaySelected: (selected, focused) {
               vm.selectDay(selected, focused);
