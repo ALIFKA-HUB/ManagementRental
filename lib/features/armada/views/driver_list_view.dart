@@ -42,10 +42,6 @@ class _DriverListViewState extends State<DriverListView> {
       _searchCtrl.text = vm.searchQuery;
     }
 
-    if (vm.isLoading && vm.isOriginalListEmpty) {
-      return const AppListSkeleton();
-    }
-
     return Column(
       children: [
         // Pinned Search Bar
@@ -84,28 +80,30 @@ class _DriverListViewState extends State<DriverListView> {
 
         // List Supir
         Expanded(
-          child: vm.drivers.isEmpty
-              ? (vm.searchQuery.isNotEmpty
-                  ? const AppEmptyState(
-                      title: 'Supir tidak ditemukan',
-                      icon: Icons.search_off_outlined,
-                    )
-                  : const AppEmptyState(
-                      title: 'Belum ada supir',
-                      icon: Icons.person_off_outlined,
-                    ))
-              : RefreshIndicator(
-                  onRefresh: vm.loadDrivers,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                    itemCount: vm.drivers.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, i) {
-                      final d = vm.drivers[i];
-                      return _DriverCard(driver: d, isAdmin: isAdmin);
-                    },
-                  ),
-                ),
+          child: vm.isLoading && vm.isOriginalListEmpty
+              ? const AppListSkeleton()
+              : vm.drivers.isEmpty
+                  ? (vm.searchQuery.isNotEmpty
+                      ? const AppEmptyState(
+                          title: 'Supir tidak ditemukan',
+                          icon: Icons.search_off_outlined,
+                        )
+                      : const AppEmptyState(
+                          title: 'Belum ada supir',
+                          icon: Icons.person_off_outlined,
+                        ))
+                  : RefreshIndicator(
+                      onRefresh: vm.loadDrivers,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                        itemCount: vm.drivers.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, i) {
+                          final d = vm.drivers[i];
+                          return _DriverCard(driver: d, isAdmin: isAdmin);
+                        },
+                      ),
+                    ),
         ),
       ],
     );
