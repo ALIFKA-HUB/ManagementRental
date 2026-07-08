@@ -95,7 +95,8 @@ class _ScheduleContent extends StatelessWidget {
                     .toList();
                 if (activeEvents.isEmpty) return const SizedBox();
                 final isSelected = isSameDay(date, vm.selectedDay);
-                final markerColor = isSelected ? Colors.white : AppColors.primary;
+                if (isSelected) return const SizedBox();
+                const markerColor = AppColors.primary;
 
                 if (activeEvents.length > 3) {
                   // Opsi A: 2 titik biasa, 1 tanda plus
