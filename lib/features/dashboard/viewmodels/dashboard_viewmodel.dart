@@ -6,6 +6,7 @@ import 'package:rentalin/data/repositories/driver_repository.dart';
 import 'package:rentalin/data/repositories/vehicle_repository.dart';
 import 'package:rentalin/data/models/vehicle_model.dart';
 import 'package:rentalin/data/models/driver_model.dart';
+import 'package:rentalin/core/utils/app_time.dart';
 
 class DashboardStats {
   final int totalVehicles;
@@ -61,13 +62,13 @@ class DashboardViewModel extends ChangeNotifier {
 
     try {
       final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
+      final today = AppTime.wibDay(now);
 
       final results = await Future.wait([
         _vehicleRepo.getAll(),
         _driverRepo.getAll(),
         _bookingRepo.getActiveBookings(),
-        _bookingRepo.getBookingsForMonth(now.year, now.month),
+        _bookingRepo.getBookingsForMonth(today.year, today.month),
         _bookingRepo.getBookingsForDate(today),
       ]);
 
@@ -79,9 +80,16 @@ class DashboardViewModel extends ChangeNotifier {
       final monthly = results[3] as List<BookingModel>;
       final todayBookings = results[4] as List<BookingModel>;
 
-      // Revenue: sum dari booking completed dan paid/dp
-      final monthCompleted = monthly.where((b) => b.isRevenueGenerating);
-      final todayCompleted = todayBookings.where((b) => b.isRevenueGenerating);
+      // Revenue: sum dari booking completed dan paid/dp yang mulai di periode target (WIB)
+      final monthCompleted = monthly.where((b) =>
+          b.isRevenueGenerating &&
+          b.startDateTime.year == today.year &&
+          b.startDateTime.month == today.month);
+      final todayCompleted = todayBookings.where((b) =>
+          b.isRevenueGenerating &&
+          b.startDateTime.year == today.year &&
+          b.startDateTime.month == today.month &&
+          b.startDateTime.day == today.day);
 
       // Muted text light
       final pending = active.where((b) =>
@@ -106,8 +114,8 @@ class DashboardViewModel extends ChangeNotifier {
         activeBookings: active.where((b) => b.effectiveStatus == BookingStatus.active).length,
         overdueBookings: active.where((b) => b.isOverdue).length,
         pendingPayment: pending,
-        todayRevenue: todayCompleted.fold(0.0, (sum, b) => sum + b.rentalPrice),
-        monthRevenue: monthCompleted.fold(0.0, (sum, b) => sum + b.rentalPrice),
+        todayRevenue: todayCompleted.fold(0.0, (acc, b) => acc + b.rentalPrice),
+        monthRevenue: monthCompleted.fold(0.0, (acc, b) => acc + b.rentalPrice),
       );
 
       upcomingToday = todayUpcoming;

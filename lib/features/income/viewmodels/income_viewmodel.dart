@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:rentalin/data/models/booking_model.dart';
 import 'package:rentalin/data/repositories/booking_repository.dart';
+import 'package:rentalin/core/utils/app_time.dart';
 
 enum IncomeFilter { today, thisWeek, thisMonth, threeMonths, custom }
 
@@ -41,22 +42,28 @@ class IncomeViewModel extends ChangeNotifier {
 
   DateTimeRange get activeRange {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final today = AppTime.wibDay(now);
     switch (currentFilter) {
       case IncomeFilter.today:
-        return DateTimeRange(start: today, end: today.add(const Duration(days: 1)));
+        return DateTimeRange(
+          start: today,
+          end: today.add(const Duration(days: 1)),
+        );
       case IncomeFilter.thisWeek:
         final weekStart = today.subtract(Duration(days: today.weekday - 1));
-        return DateTimeRange(start: weekStart, end: today.add(const Duration(days: 1)));
+        return DateTimeRange(
+          start: weekStart,
+          end: weekStart.add(const Duration(days: 7)),
+        );
       case IncomeFilter.thisMonth:
         return DateTimeRange(
-          start: DateTime(now.year, now.month, 1),
-          end: today.add(const Duration(days: 1)),
+          start: DateTime(today.year, today.month, 1),
+          end: DateTime(today.year, today.month + 1, 1),
         );
       case IncomeFilter.threeMonths:
         return DateTimeRange(
-          start: DateTime(now.year, now.month - 2, 1),
-          end: today.add(const Duration(days: 1)),
+          start: DateTime(today.year, today.month - 2, 1),
+          end: DateTime(today.year, today.month + 1, 1),
         );
       case IncomeFilter.custom:
         return DateTimeRange(
@@ -83,11 +90,10 @@ class IncomeViewModel extends ChangeNotifier {
           .toList()
         ..sort((a, b) => b.startDateTime.compareTo(a.startDateTime));
 
-      // Aggregate per hari
+      // Aggregate per hari (normalisasi ke WIB)
       final Map<DateTime, double> byDay = {};
       for (final b in paidBookings) {
-        final day = DateTime(
-            b.startDateTime.year, b.startDateTime.month, b.startDateTime.day);
+        final day = AppTime.wibDay(b.startDateTime);
         byDay[day] = (byDay[day] ?? 0) + b.rentalPrice;
       }
 
