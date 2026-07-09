@@ -20,44 +20,102 @@
 
 ---
 
-## 📸 Dokumentasi Visual & Gambaran Aplikasi
+## 🏗️ Stack Teknologi & Arsitektur
 
-Berikut adalah visualisasi antarmuka aplikasi dengan tema **Neobank Style**:
+Aplikasi dikembangkan dengan pola arsitektur **MVVM (Model-View-ViewModel)** berbasis **Provider** untuk memisahkan logika bisnis dari antarmuka pengguna:
 
-### 1. Dashboard Utama (Metrik & Pencarian)
-Dashboard menampilkan ringkasan performa armada, metrik operasional secara real-time, pencarian global, dan riwayat transaksi terbaru.
-![Dashboard](assets/readme/dashboard.png)
+```mermaid
+graph TD
+    subgraph Client [Aplikasi Flutter]
+        UI[Views / UI Components]
+        VM[ViewModels / Provider State]
+        Repo[Data Repositories]
+    end
+    subgraph Firebase [Backend Services]
+        Auth[Firebase Authentication]
+        Firestore[Cloud Firestore NoSQL]
+        Storage[Cloud Storage]
+    end
+    UI <--> VM
+    VM <--> Repo
+    Repo <--> Auth
+    Repo <--> Firestore
+    Repo <--> Storage
+```
 
-### 2. Pencarian & Penyaringan Kategori Armada
-Penyaringan armada berbasis memori reaktif dengan kolom pencarian nama/plat nomor serta Choice Chips filter kategori.
-![Pencarian Armada](assets/readme/armada_search.png)
-
-### 3. Kalender & Jadwal Penugasan (Calendar Dots)
-Kalender interaktif dilengkapi dengan bulatan penanda jadwal aktif (1, 2, 3 titik, atau tanda `+` jika lebih dari 3). Tanggal yang dipilih secara otomatis menyembunyikan titik penanda untuk menghindari visual bertumpuk.
-![Kalender Dots](assets/readme/calendar_dots.png)
-
-### 4. Transisi Skeleton Loading Premium
-Efek skeleton loading terisolasi di area list kendaraan dan supir tanpa mengaburkan kolom pencarian di bagian atas, mengeliminasi layout shift yang mengganggu.
-![Skeleton Loading](assets/readme/armada_skeleton_loading.png)
+- **Frontend Framework:** Flutter & Dart (minimum SDK v3.22)
+- **Database & Auth:** Firebase Cloud Firestore & Firebase Auth.
+- **Optimasi Jaringan:** Firebase Timeout Guard untuk penanganan kegagalan koneksi lambat secara elegan.
+- **Penyimpanan:** Firebase Storage (untuk foto armada/dokumen).
 
 ---
 
-## 🛠️ Stack Teknologi & Arsitektur
+## 📊 Hubungan Data (Database Schema)
 
-- **Frontend Framework:** Flutter & Dart (minimum SDK v3.22)
-- **Arsitektur Aplikasi:** Model-View-ViewModel (MVVM) berbasis **Provider** untuk manajemen state yang reaktif dan teratur.
-- **Backend & Database:** Firebase Cloud Firestore (NoSQL).
-- **Autentikasi:** Firebase Auth (Email & Password).
-- **Keamanan Database:** Aturan Keamanan Firestore (*Firestore Security Rules*) berbasis otorisasi per peran (role).
-- **Penyimpanan:** Firebase Storage (untuk foto armada/dokumen).
-- **Optimasi Jaringan:** Firebase Timeout Guard untuk penanganan kegagalan koneksi lambat secara elegan.
+Hubungan antardokumen pada Cloud Firestore dirancang sebagai berikut:
+
+```mermaid
+erDiagram
+    USERS {
+        string userId PK
+        string email
+        string displayName
+        string role
+        string driverId FK
+    }
+    DRIVERS {
+        string driverId PK
+        string userId FK
+        string name
+        string codeId
+        string phone
+        string status
+    }
+    VEHICLES {
+        string vehicleId PK
+        string name
+        string plateNumber
+        string category
+        string status
+    }
+    BOOKINGS {
+        string bookingId PK
+        string driverId FK
+        string vehicleId FK
+        string customerId FK
+        date startDate
+        date endDate
+        string paymentStatus
+    }
+    CUSTOMERS {
+        string customerId PK
+        string name
+        string phone
+    }
+    USERS ||--o| DRIVERS : "linked to"
+    DRIVERS ||--o{ BOOKINGS : "assigned to"
+    VEHICLES ||--o{ BOOKINGS : "used in"
+    CUSTOMERS ||--o{ BOOKINGS : "places"
+```
+
+---
+
+## 🎨 Design System (Neobank Style)
+
+Antarmuka aplikasi mengadopsi gaya **Neobank** yang bersih, modern, dan memiliki kontras tinggi dengan panduan desain sebagai berikut:
+
+### Skema Warna
+- **Background:** Off-white / Abu-abu sangat terang (`#F9FAFB`)
+- **Surface:** Putih Murni (`#FFFFFF`) dengan shadow halus
+- **Primary / Aksen:** Hijau Lime/Neon (`#A3E635`)
+- **Secondary:** Hitam Pekat / Abu gelap (`#1F2937`)
 
 ---
 
 ## 📌 Fitur Utama Aplikasi
 
 ### 1. Dashboard & Analitik Keuangan (Admin)
-- **Kartu Metrik Utama:** Jumlah kendaraan keluar, jumlah booking baru hari ini, dan total piutang sewa.
+- **Metrik Utama:** Jumlah kendaraan keluar, jumlah booking baru hari ini, dan total piutang sewa.
 - **Laporan Pendapatan:** Grafik visual interaktif dengan pengelompokan piutang sewa vs nominal lunas.
 - **Pencarian Global:** Cari data transaksi atau armada langsung dari halaman utama.
 
@@ -118,7 +176,7 @@ lib/
    flutter pub get
    ```
 3. **Konfigurasi Firebase:**
-   Jalankan inisialisasi FlutterFire atau letakkan file kredensial secara manual:
+   Jalankan inisialisasi Firebase atau letakkan file kredensial secara manual:
    - File Android: `android/app/google-services.json`
    - File iOS: `ios/Runner/GoogleService-Info.plist`
 4. **Deploy Aturan Keamanan Database & Indeks:**
